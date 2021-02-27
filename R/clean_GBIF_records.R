@@ -43,7 +43,7 @@ clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_re
     ind <- nchar(dat_sub$decimalLongitude)<5
     dat_sub <- dat_sub[!ind,]
     
-    n_split <- 2*10^5 # number of records per individual chunks (roughly)
+    n_split <- 10^6 # number of records per individual chunks (roughly)
     
     if (nrow(dat_sub)>n_split){
       
@@ -64,7 +64,7 @@ clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_re
         if (thin_records){
           dat_thinned <- list()
           
-          cat("\n Record thinning is enabled!  \n")
+          cat("\n Record thinning is enabled!  \n\n")
           
           for (k in 1:length(unique(dat_sub_sub$speciesKey))){
             dat_spec <- subset(dat_sub_sub,speciesKey==unique(dat_sub_sub$speciesKey)[k])
@@ -76,18 +76,44 @@ clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_re
           dat_sub_sub <- rbindlist(dat_thinned)
         }
 
-        # clean records
-        if (any(table(dat_sub_sub$speciesKey)>(10^5))){ # outlier test of clean_coordinate is memory-consuming for species with many records
+        # clean records #######################################################################
+        # outlier test of clean_coordinate is memory-consuming for species with many records, which need to be separated
+        max_records <- 10^5
+        if (any(table(dat_sub_sub$speciesKey)>max_records)){ # check for species with many records
           
-          cat(paste0("\n No outlier test possible for ",i,"_",j))
+          spec_manyrecords <- names(which(table(dat_sub_sub$speciesKey)>max_records)) # species with many records
+          dat_lessrecords <- subset(dat_sub_sub,!speciesKey%in%spec_manyrecords)
           
-          dat_cleaned <- clean_coordinates(dat_sub_sub, 
-                                           lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
-                                           value ="clean",
-                                           tests = c("capitals","centroids", "equal", "gbif", "institutions",  # remove 'seas' test from default
-                                                     "zeros")
-                                           ) # this outlier methods is more robust compared to the default 'quantile'
-          
+          ## clean records for species with less records together
+          counter <- 1
+          if (nrow(dat_lessrecords)>0){
+            counter <- counter + 1
+            dat_cleaned_sub <- list()
+            dat_cleaned_sub[[1]] <- clean_coordinates(dat_lessrecords, 
+                                                      lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
+                                                      value ="clean",
+                                                      tests = c("capitals","centroids", "equal", "gbif", "institutions","outliers",  # remove 'seas' test from default
+                                                                "zeros"),
+                                                      outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'          
+          }
+          for (l in 1:length(spec_manyrecords)){ # loop over species with many records
+            
+            cat(paste0("\n Data split into pieces for species ",spec_manyrecords[l],"! \n"))
+            
+            dat_manyrecords <- subset(dat_sub_sub,speciesKey%in%spec_manyrecords[l])
+            pieces <- c(seq(1,nrow(dat_manyrecords),by=max_records),nrow(dat_manyrecords)) # split data into smaller pieces
+            for (m in 2:length(pieces)){
+              counter <- counter + 1
+              ## clean records using subsets of data
+              dat_cleaned_sub[[counter]] <- clean_coordinates(dat_manyrecords[pieces[m-1]:pieces[m],], 
+                                                        lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
+                                                        value ="clean",
+                                                        tests = c("capitals","centroids", "equal", "gbif", "institutions","outliers",  # remove 'seas' test from default
+                                                                  "zeros"),
+                                                        outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
+            }
+          }
+          dat_cleand <- rbindlist(dat_cleaned_sub)
         } else {
           
           dat_cleaned <- clean_coordinates(dat_sub_sub, 
