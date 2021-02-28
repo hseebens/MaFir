@@ -10,6 +10,7 @@ library(CoordinateCleaner)
 library(rgbif)
 library(httr)
 library(dismo)
+library(sf)
 
 
 ### Full path to GBIF download files ###################################
@@ -22,6 +23,7 @@ file_name_extension <- "SInAS"
 
 
 
+########################################################################
 ### load scripts #######################################################
 source(file.path("R","decompress_file.R")) # a function to decompress large zip files
 source(file.path("R","extract_GBIF_columns.R")) # a function to extract from zipped GBIF downloads
@@ -29,14 +31,16 @@ source(file.path("R","clean_GBIF_records.R")) # a function to clean GBIF records
 # source(file.path("R","request_GBIF_download.R")) # a function to decompress large zip files
 
 
-
+########################################################################
 ### send requests to GBIF ##############################################
 n_accounts <- 7
 request_GBIF_download(name_of_specieslist)
 
+########################################################################
 ### extract relevant information from GBIF downloads ###################
 extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 
+########################################################################
 ### clean GBIF records #################################################
 
 ## High numbers of records may cause memory issues. The number of records
@@ -48,3 +52,6 @@ extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 thin_records <- T
 
 clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
+
+########################################################################
+### identify

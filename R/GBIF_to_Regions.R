@@ -11,164 +11,160 @@
 ##################################################################################
 
 
-graphics.off()
-rm(list=ls())
-
-library(sf)
-
-setwd("/home/hanno/Bioinvasion/InvAccu/MarineExpansion")
-# setwd("/scratch/home/hseebens/Bioinvasion/InvAccu/MarineExpansion")
-
-
-### load data ###############################################################
-
-## First record database with GIBF keys 
-firstrecords_GBIF <- read.csv("Data/SpeciesFirstRecords_GBIFkeys.csv",sep=";")
-colnames(firstrecords_GBIF)[colnames(firstrecords_GBIF)=="Country"] <- "Region"
-colnames(firstrecords_GBIF)[colnames(firstrecords_GBIF)=="NewName"] <- "Species"
-uni_spec <- unique(firstrecords_GBIF[,c("Species","speciesKey")])
-
-## (REMOVE CASUALS!!!!)
-
-## (FOR OBIS WE NEED AN ID-SPECIES FILE TO IDENTIFY ALIEN POPULATIONS)
-## First record database with OBIS keys
-firstrecords_OBIS <- readRDS("Data/RobisCoordinates.rds")
-
-## Polygon file of marine and terrestrial regions
-regions <- st_read(dsn="Data/Shapefiles",layer="terraqua",stringsAsFactors = F)
-
-regions$Realm <- NA
-regions$Realm[!is.na(regions$ECOREGION)] <- "marine"
-regions$Realm[!is.na(regions$Region)] <- "terrestrial"
-
-regions$Region[!is.na(regions$ECOREGION)] <- regions$ECOREGION[!is.na(regions$ECOREGION)]
-# regions$Region[!is.na(regions$featurecla)] <- regions$name[!is.na(regions$featurecla)]
-regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
-
-## Terrestrial to marine ecoregion file
-neighbours <- read.table("Data/Combined MEOW List_Hanno.csv",sep=";",header=T)
-neighbours <- subset(neighbours,Action!="remove")
-
-
-## Identify region of occurrence for each coordinate entry ######################################
-
-## All taxon-region pairs for the identification of alien populations
-TaxonRegionPairs <- paste(firstrecords_GBIF$speciesKey,firstrecords_GBIF$Region,sep="_")
-
-## add marine ecoregions to taxon-region pairs 
-marine_firstrecs <- merge(neighbours,firstrecords_GBIF,by="Region")
-marine_speckeys <- unique(marine_firstrecs[,c("MEOW","speciesKey")])
-meow_firstrecords <- unique(marine_firstrecs[,c("MEOW","Species","speciesKey","FirstRecord","Source")])
-TaxonRegionPairs <- c(TaxonRegionPairs,paste(marine_speckeys$speciesKey,marine_speckeys$MEOW,sep="_"))
-
-## list species which are clearly non-marine, clearly marine and clearly freshwater ######
-non_marine <- subset(firstrecords_GBIF,Class=="Insecta" 
-                     | Phylum=="Tracheophyta"
-                     | Phylum=="Anthocerotophyta"
-                     | Phylum=="Bryophyta"
-                     | Class=="Arachnida"
-                     | Class=="Aves"
-                     | Class=="Amphibia"
-                     | Class=="Mammalia" # not fully correct, but no marine alien mammal known
-                     | Habitat_marine=="0")$speciesKey
-
-marine <- subset(firstrecords_GBIF,Habitat_marine=="1")$speciesKey
-
-freshwater <- unique(subset(firstrecords_GBIF,Habitat_freshwater=="1" & Habitat_marine=="0" & Habitat_terrestrial=="0")$speciesKey)
-# subset(firstrecords_GBIF,speciesKey%in%freshwater)$Species
-
-
-## Identify in which region coordinates fall ############################
-nchunks <- 21 # set total number of data files, which contain the GBIF records
-nsteps <- 10
-
-all_counter <- 0
-chunk_out <- all_out <- list()
-for (i in 1:nchunks){ # loop over all chunks of GBIF coordinate data
-
-  # Import processed GBIF files
-  if (i<22) all_coords <- readRDS(paste0("../../../Storage_large/GBIF/FirstRecords_Dec2020/GBIFrecords_Ekinprocessed/GBIFrecords_Cleaned",i,".rds")) #rdsfile
-  if (i==22){
-    all_coords <- readRDS("RobisCoordinates.rds") #rdsfile
-    colnames(all_coords)[colnames(all_coords)=="id"] <- "speciesKey"
-  } 
+coordinates_in_region <- function(){
   
-  # Transform to sf object
-  coords_sf <- st_as_sf(all_coords,coords=c("decimalLongitude","decimalLatitude"),crs=st_crs(regions))
+  ### load data ###############################################################
   
-  # Arrange the steps of for loop
-  steps <- ceiling(seq(1,nrow(coords_sf),length.out=nsteps))
+  ## First record database with GIBF keys 
+  firstrecords_GBIF <- read.csv("Data/SpeciesFirstRecords_GBIFkeys.csv",sep=";")
+  colnames(firstrecords_GBIF)[colnames(firstrecords_GBIF)=="Country"] <- "Region"
+  colnames(firstrecords_GBIF)[colnames(firstrecords_GBIF)=="NewName"] <- "Species"
+  uni_spec <- unique(firstrecords_GBIF[,c("Species","speciesKey")])
   
-  # Identify region and alien population
-  for (j in 1:(length(steps)-1)){# 
-    all_counter <- all_counter + 1
+  ## (REMOVE CASUALS!!!!)
+  
+  ## (FOR OBIS WE NEED AN ID-SPECIES FILE TO IDENTIFY ALIEN POPULATIONS)
+  ## First record database with OBIS keys
+  firstrecords_OBIS <- readRDS("Data/RobisCoordinates.rds")
+  
+  ## Polygon file of marine and terrestrial regions
+  regions <- st_read(dsn="Data/Shapefiles",layer="terraqua",stringsAsFactors = F)
+  
+  regions$Realm <- NA
+  regions$Realm[!is.na(regions$ECOREGION)] <- "marine"
+  regions$Realm[!is.na(regions$Region)] <- "terrestrial"
+  
+  regions$Region[!is.na(regions$ECOREGION)] <- regions$ECOREGION[!is.na(regions$ECOREGION)]
+  # regions$Region[!is.na(regions$featurecla)] <- regions$name[!is.na(regions$featurecla)]
+  regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
+  
+  ## Terrestrial to marine ecoregion file
+  neighbours <- read.table("Data/Combined MEOW List_Hanno.csv",sep=";",header=T)
+  neighbours <- subset(neighbours,Action!="remove")
+  
+  
+  ## Identify region of occurrence for each coordinate entry ######################################
+  
+  ## All taxon-region pairs for the identification of alien populations
+  TaxonRegionPairs <- paste(firstrecords_GBIF$speciesKey,firstrecords_GBIF$Region,sep="_")
+  
+  ## add marine ecoregions to taxon-region pairs 
+  marine_firstrecs <- merge(neighbours,firstrecords_GBIF,by="Region")
+  marine_speckeys <- unique(marine_firstrecs[,c("MEOW","speciesKey")])
+  meow_firstrecords <- unique(marine_firstrecs[,c("MEOW","Species","speciesKey","FirstRecord","Source")])
+  TaxonRegionPairs <- c(TaxonRegionPairs,paste(marine_speckeys$speciesKey,marine_speckeys$MEOW,sep="_"))
+  
+  ## list species which are clearly non-marine, clearly marine and clearly freshwater ######
+  non_marine <- subset(firstrecords_GBIF,Class=="Insecta" 
+                       | Phylum=="Tracheophyta"
+                       | Phylum=="Anthocerotophyta"
+                       | Phylum=="Bryophyta"
+                       | Class=="Arachnida"
+                       | Class=="Aves"
+                       | Class=="Amphibia"
+                       | Class=="Mammalia" # not fully correct, but no marine alien mammal known
+                       | Habitat_marine=="0")$speciesKey
+  
+  marine <- subset(firstrecords_GBIF,Habitat_marine=="1")$speciesKey
+  
+  freshwater <- unique(subset(firstrecords_GBIF,Habitat_freshwater=="1" & Habitat_marine=="0" & Habitat_terrestrial=="0")$speciesKey)
+  # subset(firstrecords_GBIF,speciesKey%in%freshwater)$Species
+  
+  
+  ## Identify in which region coordinates fall ############################
+  nchunks <- 21 # set total number of data files, which contain the GBIF records
+  nsteps <- 10
+  
+  all_counter <- 0
+  chunk_out <- all_out <- list()
+  for (i in 1:nchunks){ # loop over all chunks of GBIF coordinate data
     
-    print(paste0(round(all_counter/(nsteps*nchunks)*100,2),"%"))
+    # Import processed GBIF files
+    if (i<22) all_coords <- readRDS(paste0("../../../Storage_large/GBIF/FirstRecords_Dec2020/GBIFrecords_Ekinprocessed/GBIFrecords_Cleaned",i,".rds")) #rdsfile
+    if (i==22){
+      all_coords <- readRDS("RobisCoordinates.rds") #rdsfile
+      colnames(all_coords)[colnames(all_coords)=="id"] <- "speciesKey"
+    } 
     
-    ## identify region of occurrence
-    ptspoly <- st_join(coords_sf[steps[j]:steps[j+1],],regions)
+    # Transform to sf object
+    coords_sf <- st_as_sf(all_coords,coords=c("decimalLongitude","decimalLatitude"),crs=st_crs(regions))
     
-    ## identify and keep only alien records
-    ptspoly$SpeciesRegion <- paste(ptspoly$speciesKey,ptspoly$Region,sep="_")
-    ptspoly_alien <- ptspoly[ptspoly$SpeciesRegion%in%TaxonRegionPairs,]
+    # Arrange the steps of for loop
+    steps <- ceiling(seq(1,nrow(coords_sf),length.out=nsteps))
     
-    ## export
-    coords_mat <- as.data.frame(st_coordinates(ptspoly_alien),stringsAsFactors = F)
-    output <- cbind.data.frame(ptspoly_alien$speciesKey,ptspoly_alien$Region,ptspoly_alien$Realm,coords_mat,stringsAsFactors=F) #
-    colnames(output) <- c("speciesKey","Region","Realm","Longitude","Latitude")#
-    output <- unique(output)
+    # Identify region and alien population
+    for (j in 1:(length(steps)-1)){# 
+      all_counter <- all_counter + 1
+      
+      print(paste0(round(all_counter/(nsteps*nchunks)*100,2),"%"))
+      
+      ## identify region of occurrence
+      ptspoly <- st_join(coords_sf[steps[j]:steps[j+1],],regions)
+      
+      ## identify and keep only alien records
+      ptspoly$SpeciesRegion <- paste(ptspoly$speciesKey,ptspoly$Region,sep="_")
+      ptspoly_alien <- ptspoly[ptspoly$SpeciesRegion%in%TaxonRegionPairs,]
+      
+      ## export
+      coords_mat <- as.data.frame(st_coordinates(ptspoly_alien),stringsAsFactors = F)
+      output <- cbind.data.frame(ptspoly_alien$speciesKey,ptspoly_alien$Region,ptspoly_alien$Realm,coords_mat,stringsAsFactors=F) #
+      colnames(output) <- c("speciesKey","Region","Realm","Longitude","Latitude")#
+      output <- unique(output)
+      
+      ## remove non-marine species in marine ecoregions and marine species in terrestrial regions
+      output <- subset(output,!(output$speciesKey%in%non_marine & output$Realm=="marine"))
+      output <- subset(output,!(output$speciesKey%in%marine & output$Realm=="terrestrial"))
+      
+      ## remove entries with a very low number of records per region (requires coordinates in the file 'outpout')
+      region_records <- as.data.frame(table(output$speciesKey,output$Region),stringsAsFactors = F)
+      region_records <- subset(region_records,Freq>0 & Freq<3)
+      remove_taxreg <- paste0(region_records$Var1,"_",region_records$Var2)
+      output <- subset(output,!(paste0(output$speciesKey,"_",output$Region)%in%remove_taxreg))
+      output <- unique(output[,c("speciesKey","Region","Realm")])
+      
+      ## identify species with the majority of records in terrestrial realm and remove
+      realm_spec <- as.matrix(table(output$speciesKey,output$Realm))
+      realm_spec_proc <- round(((realm_spec) / rowSums(realm_spec))*100) # percent records per realm
+      marinespec <- rownames(realm_spec_proc)[realm_spec_proc[,which(colnames(realm_spec_proc)=="marine")] > 75]
+      output <- subset(output,!(speciesKey%in%marinespec & Realm=="terrestrial")) # remove terrestrial records of marine species
+      non_marinespec <- rownames(realm_spec_proc)[realm_spec_proc[,which(colnames(realm_spec_proc)=="marine")] <= 75]
+      output <- subset(output,!(speciesKey%in%non_marinespec & Realm=="marine")) # remove marine records of non-marine species
+      
+      # ## test 
+      # test_dat <- unique(merge(unique(output[,c("speciesKey","Region","Realm")]),firstrecords_GBIF[,c("speciesKey","Species","Class","Order")],by="speciesKey"))
+      # graphics.off()
+      # x11(width=12,height=12)
+      # plot(st_geometry(regions),xlim=c(0,10),ylim=c(50,60))
+      # points(output[which(output$speciesKey==3189846 & output$Region=="North Sea"),c("Longitude","Latitude")],col="black",pch=16)
+      # 
+      # subset(firstrecords_GBIF,speciesKey==9809222) #>75, no vascular plants, no birds, no insects
+      # tab_realm[which(rownames(tab_realm)=="5277297"),]
+      
+      ## output ###############
+      saveRDS(output,paste0("Data/FirstRecords_TerrMarRegions_min3_",i,"_",j,".rds"))
+      
+      chunk_out[[j]] <- output
+    }
+    chunk_records <- unique(do.call("rbind",chunk_out))
     
-    ## remove non-marine species in marine ecoregions and marine species in terrestrial regions
-    output <- subset(output,!(output$speciesKey%in%non_marine & output$Realm=="marine"))
-    output <- subset(output,!(output$speciesKey%in%marine & output$Realm=="terrestrial"))
-
-    ## remove entries with a very low number of records per region (requires coordinates in the file 'outpout')
-    region_records <- as.data.frame(table(output$speciesKey,output$Region),stringsAsFactors = F)
-    region_records <- subset(region_records,Freq>0 & Freq<3)
-    remove_taxreg <- paste0(region_records$Var1,"_",region_records$Var2)
-    output <- subset(output,!(paste0(output$speciesKey,"_",output$Region)%in%remove_taxreg))
-    output <- unique(output[,c("speciesKey","Region","Realm")])
-    
-    ## identify species with the majority of records in terrestrial realm and remove
-    realm_spec <- as.matrix(table(output$speciesKey,output$Realm))
-    realm_spec_proc <- round(((realm_spec) / rowSums(realm_spec))*100) # percent records per realm
-    marinespec <- rownames(realm_spec_proc)[realm_spec_proc[,which(colnames(realm_spec_proc)=="marine")] > 75]
-    output <- subset(output,!(speciesKey%in%marinespec & Realm=="terrestrial")) # remove terrestrial records of marine species
-    non_marinespec <- rownames(realm_spec_proc)[realm_spec_proc[,which(colnames(realm_spec_proc)=="marine")] <= 75]
-    output <- subset(output,!(speciesKey%in%non_marinespec & Realm=="marine")) # remove marine records of non-marine species
-    
-    # ## test 
-    # test_dat <- unique(merge(unique(output[,c("speciesKey","Region","Realm")]),firstrecords_GBIF[,c("speciesKey","Species","Class","Order")],by="speciesKey"))
-    # graphics.off()
-    # x11(width=12,height=12)
-    # plot(st_geometry(regions),xlim=c(0,10),ylim=c(50,60))
-    # points(output[which(output$speciesKey==3189846 & output$Region=="North Sea"),c("Longitude","Latitude")],col="black",pch=16)
-    # 
-    # subset(firstrecords_GBIF,speciesKey==9809222) #>75, no vascular plants, no birds, no insects
-    # tab_realm[which(rownames(tab_realm)=="5277297"),]
+    all_out[[i]] <- chunk_records
     
     ## output ###############
-    saveRDS(output,paste0("Data/FirstRecords_TerrMarRegions_min3_",i,"_",j,".rds"))
-    
-    chunk_out[[j]] <- output
+    # saveRDS(chunk_records,paste0("GBIF_First_Records_",i,".rds"))
   }
-  chunk_records <- unique(do.call("rbind",chunk_out))
+  all_records <- do.call("rbind",all_out)
+  all_records <- unique(all_records)
   
-  all_out[[i]] <- chunk_records
+  all_records_spec <- merge(all_records,uni_spec,by="speciesKey",all.x=T)
   
-  ## output ###############
-  # saveRDS(chunk_records,paste0("GBIF_First_Records_",i,".rds"))
+  # subset(all_records_spec,Realm=="marine")
+  
+  # ## output ###############
+  saveRDS(all_records_spec,"Data/FirstRecords_TerrMarRegions_min3.rds")
+  # all_records_spec <- readRDS("Data/FirstRecords_TerrMarRegions_min3.rds")
+  
 }
-all_records <- do.call("rbind",all_out)
-all_records <- unique(all_records)
 
-all_records_spec <- merge(all_records,uni_spec,by="speciesKey",all.x=T)
-
-# subset(all_records_spec,Realm=="marine")
-
-# ## output ###############
-saveRDS(all_records_spec,"Data/FirstRecords_TerrMarRegions_min3.rds")
-# all_records_spec <- readRDS("Data/FirstRecords_TerrMarRegions_min3.rds")
 
 
 # x <- 0

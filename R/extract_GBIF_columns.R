@@ -1,3 +1,11 @@
+## Extract GBIF data from downloads ########################################
+#
+#
+#
+#
+############################################################################
+
+
 
 extract_GBIF_columns <- function(path_to_GBIFdownloads){
   
@@ -50,7 +58,7 @@ extract_GBIF_columns <- function(path_to_GBIFdownloads){
     dat_sub <- dat[,c("speciesKey","decimalLatitude","decimalLongitude")]
     
     #######################################################################
-    ### clean GBIF records ################################################
+    ### initial cleaning of GBIF records ##################################
     
     # remove duplicates
     ind <- duplicated(dat_sub)
@@ -73,17 +81,7 @@ extract_GBIF_columns <- function(path_to_GBIFdownloads){
     # remove empty records
     ind <- is.na(dat_sub$speciesKey) | is.na(dat_sub$decimalLatitude) | is.na(dat_sub$decimalLongitude)
     dat_sub <- dat_sub[!ind,]
-    
-    # clean records
-    dat_cleaned <- clean_coordinates(dat_sub, 
-                                     lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
-                                     value ="clean",
-                                     tests = c("capitals","centroids", "equal", "gbif", "institutions", "outliers",  # remove 'seas' test from default
-                                               "zeros"),
-                                     # tests = c( "outliers"),
-                                     outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
-    
-    
+
     ## output ###########
     saveRDS(dat_red,file = file.path("Data","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))
     

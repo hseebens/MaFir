@@ -1,15 +1,20 @@
 ## Clean GBIF records ###########################################
+#
+#
+#
+#
+#################################################################
+
+
 
 clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_records){
 
-  # thin_records <- T
-  
   ## identify files to import (i.e., all files within all sub-directories ending with .rds and with 'GBIFrecords_NUMBER_NUMBER' in name)
   allfiles <- list.files(path_to_GBIFdownloads)
   GBIF_records_files <- allfiles[grepl("\\.rds",allfiles)]
 
   dat_all <- list()
-  for (i in 1:length(GBIF_records_files)){ # 
+  for (i in 2:length(GBIF_records_files)){ # 
     
     cat(paste0("\n ",i,": ",GBIF_records_files[i],"\n"))
     
@@ -85,11 +90,11 @@ clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_re
           dat_lessrecords <- subset(dat_sub_sub,!speciesKey%in%spec_manyrecords)
           
           ## clean records for species with less records together
-          counter <- 1
+          counter <- 0
+          dat_cleaned_sub <- list()
           if (nrow(dat_lessrecords)>0){
             counter <- counter + 1
-            dat_cleaned_sub <- list()
-            dat_cleaned_sub[[1]] <- clean_coordinates(dat_lessrecords, 
+            dat_cleaned_sub[[counter]] <- clean_coordinates(dat_lessrecords, 
                                                       lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
                                                       value ="clean",
                                                       tests = c("capitals","centroids", "equal", "gbif", "institutions","outliers",  # remove 'seas' test from default
@@ -98,11 +103,14 @@ clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_re
           }
           for (l in 1:length(spec_manyrecords)){ # loop over species with many records
             
-            cat(paste0("\n Data split into pieces for species ",spec_manyrecords[l],"! \n"))
+            # cat(paste0("\n Data split into pieces for species ",spec_manyrecords[l],"! \n"))
             
             dat_manyrecords <- subset(dat_sub_sub,speciesKey%in%spec_manyrecords[l])
             pieces <- c(seq(1,nrow(dat_manyrecords),by=max_records),nrow(dat_manyrecords)) # split data into smaller pieces
             for (m in 2:length(pieces)){
+              
+              cat(paste0("\n Data split into pieces for species ",spec_manyrecords[l],": ",m-1,"/",length(pieces)-1,"\n"))
+              
               counter <- counter + 1
               ## clean records using subsets of data
               dat_cleaned_sub[[counter]] <- clean_coordinates(dat_manyrecords[pieces[m-1]:pieces[m],], 
@@ -113,7 +121,7 @@ clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_re
                                                         outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
             }
           }
-          dat_cleand <- rbindlist(dat_cleaned_sub)
+          dat_cleaned <- rbindlist(dat_cleaned_sub)
         } else {
           
           dat_cleaned <- clean_coordinates(dat_sub_sub, 
@@ -157,10 +165,10 @@ clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_re
                                                  "zeros"),
                                        # tests = c( "outliers"),
                                        outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
+      
+      # intermediate saving of file (just for safety, files can be removed if everything works)
+      saveRDS(dat_cleaned,file.path("Data","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".rds")))
     }
-
-    # intermediate saving of file (just for safety, files can be removed if everything works)
-    saveRDS(dat_cleaned,file.path("Data","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".rds")))
     
     dat_all[[i]] <- dat_cleaned
   }
