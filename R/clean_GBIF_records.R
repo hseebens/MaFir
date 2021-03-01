@@ -7,7 +7,11 @@
 
 
 
-clean_GBIF_records <- function(path_to_GBIFdownloads,file_name_extension,thin_records){
+clean_GBIF_records <- function(
+  path_to_GBIFdownloads,
+  file_name_extension,
+  thin_records
+  ){
 
   ## identify files to import (i.e., all files within all sub-directories ending with .rds and with 'GBIFrecords_NUMBER_NUMBER' in name)
   allfiles <- list.files(path_to_GBIFdownloads)

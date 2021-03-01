@@ -28,7 +28,7 @@ request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=p
   #######################################################################################
   ## load species list to be downloaded #################################################
   
-  SpecNames <-  read.table(file.path("Data","Output","Intermediate",name_of_specieslist),stringsAsFactors = F,header=T)$scientificName
+  SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)$scientificName
   
   SpecNames <- unique(SpecNames)                                      # Get unique species names
   

@@ -5,19 +5,28 @@ rm(list=ls())
 
 
 library(data.table)
-library(CoordinateCleaner)
 # library(zoo)
 library(rgbif)
+library(CoordinateCleaner)
 library(httr)
 library(dismo)
 library(sf)
+library(worrms)
 
 
 ### Full path to GBIF download files ###################################
 ### Note: All files in that folder will be considered as relevant files
 path_to_GBIFdownloads <- "/home/hanno/Storage_large/GBIF/SInASdata/GBIF_230221"
 
-name_of_specieslist <- "SInAS_AlienSpeciesDB_2.3.1_FullTaxaList.csv" # has to be stored in Data/Input/ and has to include a column named 'scientificName'
+## has to be stored in Data/Input/ and has to include a column named 'scientificName' 
+## for taxon names and 'Location' for region names and 'Taxon' (no authority) for habitat check
+name_of_specieslist <- "SInAS_AlienSpeciesDB_2.3.1_FullTaxaList.csv" 
+
+## Name of file with the information of alien species and regions
+name_of_TaxonLoc <- "SInAS_AlienSpeciesDB_2.3.1.csv"
+
+## name of shapefile providing polygons for the new delineation
+name_of_shapefile <- "terraqua"
 
 file_name_extension <- "SInAS"
 
@@ -29,6 +38,7 @@ source(file.path("R","decompress_file.R")) # a function to decompress large zip 
 source(file.path("R","extract_GBIF_columns.R")) # a function to extract from zipped GBIF downloads
 source(file.path("R","clean_GBIF_records.R")) # a function to clean GBIF records
 # source(file.path("R","request_GBIF_download.R")) # a function to decompress large zip files
+source(file.path("R","get_WoRMS_habitats.R")) # get habitat information from WoRMS
 
 
 ### Obtaining data #####################################################
@@ -48,6 +58,7 @@ user <- "ekinhanno1"                                  # your gbif.org username
 pwd <- "seebenskaplan1234"                                     # your gbif.org password (set the same password for all accounts for convenience)
 email <- "ekinhanno1@outlook.com"                 # your email which you will recieve the download link
 
+## request GBIF downloads
 request_GBIF_download(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email)
 
 ### extract relevant information from GBIF downloads ###################
@@ -56,7 +67,7 @@ extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 
 ### get OBIS records ###################################################
 
-to be done...
+# to be done...
 
 
 ### Cleaning data ######################################################
@@ -74,8 +85,25 @@ clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
 
 ### clean OBIS records #################################################
 
-to be done...
+# to be done... necessary? apply coordinate cleaner to OBIS?
 
 
 ########################################################################
-### identify
+### get alien regions based on coordintates ############################
+
+## Assign coordinates to different realms (terrestrial, freshwater, marine)
+## depending on geographic location and additional tests
+realm_extension <- TRUE 
+
+## assigning country checklists to marine polygons
+checklist_to_marine <- TRUE
+
+# Region shapefile requires a consistent structure for marine and terrestrial polygons !!!!!
+
+transform_coords_to_regions(name_of_TaxonLoc,name_of_shapefile,realm_extension,file_name_extension)
+
+
+########################################################################
+## add first records per region (requires 'eventDate' column) ##########
+add_first_records(file_name_extension)
+
