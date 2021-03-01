@@ -11,11 +11,11 @@
 ##################################################################################
 
 
-transform_coords_to_regions <- function(
-  name_of_TaxonLoc,
-  name_of_shapefile,
-  realm_extension,
-  file_name_extension
+coords_to_regions <- function(
+        name_of_TaxonLoc,
+        name_of_shapefile,
+        realm_extension,
+        file_name_extension
   ){
   
   ### load data ###############################################################
@@ -24,7 +24,8 @@ transform_coords_to_regions <- function(
   GBIF_specieskeys <- read.csv2(file.path("Data","Intermediate","SpeciesGBIFkeys.csv"))
   
   ## Taxon list
-  SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
+  # SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
+  SpecNames <- read.table(file.path("Data","Intermediate",paste0("Habitats_",name_of_specieslist)),stringsAsFactors = F)
   
   if (realm_extension){ # check if realms should be identified
     
@@ -48,7 +49,7 @@ transform_coords_to_regions <- function(
   GBIF_specieskeys <- read.csv2(file.path("Data","Intermediate","SpeciesGBIFkeys.csv"))
 
   SpecRegionData_keys <- merge(SpecRegionData,GBIF_specieskeys[,c("scientificName","speciesKey")],by="scientificName")  
-  # uni_spec <- unique(SpecData_keys[,c("Species","speciesKey")])
+  uni_spec <- unique(SpecRegionData_keys[,c("scientificName","speciesKey")])
 
   # ## (FOR OBIS WE NEED AN ID-SPECIES FILE TO IDENTIFY ALIEN POPULATIONS)
   # ## First record database with OBIS keys
@@ -84,7 +85,7 @@ transform_coords_to_regions <- function(
     marine_terr_recs <- merge(neighbours,SpecRegionData_keys,by="Location")
     marine_speckeys <- unique(marine_terr_recs[,c("MEOW","speciesKey")])
     meow_records <- unique(marine_terr_recs[,c("MEOW","scientificName","speciesKey")])#,"Source"
-    writeRDS(meow_records,file.path("Data","Intermediate","MarineRecords.rds"))
+    saveRDS(meow_records,file.path("Data","Intermediate","MarineRecords.rds"))
     TaxonRegionPairs <- c(TaxonRegionPairs,paste(marine_speckeys$speciesKey,marine_speckeys$MEOW,sep="_"))
   
     ## list species which are clearly non-marine, clearly marine and clearly freshwater ######
@@ -107,7 +108,7 @@ transform_coords_to_regions <- function(
   
   ## Identify in which region coordinates fall ############################
   
-  ## check available files ##################
+  ## check available files in folder 'Intermediate' or 'Output' ##################
   folder <- "Intermediate"
   available_files <- list.files(file.path("Data","Intermediate"))
   available_files <- available_files[grep("GBIFrecords_Cleaned_",available_files)]
@@ -219,7 +220,16 @@ transform_coords_to_regions <- function(
   all_records_spec$Realm[all_records_spec$speciesKey%in%freshwater] <- "freshwater"
   
   # ## output ###############
-  saveRDS(all_records_spec,"Data",file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
+  saveRDS(all_records_spec,file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
+  
+  ## remove intermediate files if previous saving was successful
+  if (file.exists(file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))){
+    for (i in 1:nchunks){ # loop over all chunks of coordinate data
+      for (j in 1:(length(steps)-1)){# 
+        file.remove(file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
+      }
+    }
+  }
 }
 
 
