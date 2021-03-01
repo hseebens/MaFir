@@ -31,16 +31,35 @@ source(file.path("R","clean_GBIF_records.R")) # a function to clean GBIF records
 # source(file.path("R","request_GBIF_download.R")) # a function to decompress large zip files
 
 
-########################################################################
+### Obtaining data #####################################################
 ### send requests to GBIF ##############################################
-n_accounts <- 7
-request_GBIF_download(name_of_specieslist)
 
-########################################################################
+## GBIF account details ############
+## Note that multiple accounts are required for n_accounts>1.
+## The accounts have to numbered x=1...n_accounts, while x is part of 
+## user name and email address. For example, user name and email should be:
+## (ekinhanno1, ekinhanno1@gmail.com), (ekinhanno2, ekinhanno2@gmail.com) and so on.
+
+n_accounts <- 7
+
+## login details for first account (x=1) (the '1' in user name and email 
+## address will be replaced be account number)
+user <- "ekinhanno1"                                  # your gbif.org username
+pwd <- "seebenskaplan1234"                                     # your gbif.org password (set the same password for all accounts for convenience)
+email <- "ekinhanno1@outlook.com"                 # your email which you will recieve the download link
+
+request_GBIF_download(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email)
+
 ### extract relevant information from GBIF downloads ###################
 extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 
-########################################################################
+
+### get OBIS records ###################################################
+
+to be done...
+
+
+### Cleaning data ######################################################
 ### clean GBIF records #################################################
 
 ## High numbers of records may cause memory issues. The number of records
@@ -52,6 +71,11 @@ extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 thin_records <- T
 
 clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
+
+### clean OBIS records #################################################
+
+to be done...
+
 
 ########################################################################
 ### identify

@@ -14,12 +14,12 @@
 
 
 
-request_GBIF_download <- function(n_accounts){
+request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email){
   
   #######################################################################################
   ### Variables #########################################################################
   
-  n_chunks <- 21       # number of chunks to divide the species records nearly equally
+  n_chunks <- n_accounts * 3       # number of chunks to divide the species records nearly equally
   # note that GBIF API only allows 3 simultaneous downloads per account
   # so, for example, you need to open 7 accounts to simultaneously request
   # the data in 21 chunks 
@@ -131,9 +131,8 @@ request_GBIF_download <- function(n_accounts){
     ## in this case, we opened accounts and emails such as:
     ## (ekinhanno1, ekinhanno1@gmail.com), (ekinhanno2, ekinhanno2@gmail.com) and so on for convenience.
     
-    user <- paste0("ekinhanno",x)                                  # your gbif.org username
-    pwd <- "seebenskaplan1234"                                     # your gbif.org password (set the same password for all accounts for convenience)
-    email <- paste0("ekinhanno",x,"@outlook.com" )                 # your email which you will recieve the download link
+    user <- gsub("1",x,user)                                  # your gbif.org username
+    email <- gsub("1",x,email)                 # your email which you will recieve the download link
     
     if (counter %% 3 == 0){                                        # every time counter can be divided by 3,
       x <- x + 1                                                   # set x + 1 => select new GBIF account below.
