@@ -83,10 +83,10 @@ extract_GBIF_columns <- function(path_to_GBIFdownloads){
     dat_sub <- dat_sub[!ind,]
 
     ## output ###########
-    saveRDS(dat_red,file = file.path("Data","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))
+    saveRDS(dat_red,file = file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))
     
     ## remove unzipped file to save space ##############
-    if (file.exists(file.path("Data","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))){
+    if (file.exists(file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))){
       file.remove(paste0("",unzipped))
     }
   }

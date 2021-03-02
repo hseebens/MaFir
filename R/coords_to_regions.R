@@ -21,7 +21,7 @@ coords_to_regions <- function(
   ### load data ###############################################################
   
   ## get GBIF species keys
-  GBIF_specieskeys <- read.csv2(file.path("Data","Intermediate","SpeciesGBIFkeys.csv"))
+  GBIF_specieskeys <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
   
   ## Taxon list
   # SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
@@ -230,8 +230,10 @@ coords_to_regions <- function(
       }
     }
   }
+  return(all_records_spec)
 }
 
+# all_records_spec <-  readRDS(file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
 
 
 # x <- 0

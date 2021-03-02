@@ -14,7 +14,7 @@
 
 
 
-request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email){
+send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email){
   
   #######################################################################################
   ### Variables #########################################################################
@@ -57,7 +57,7 @@ request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=p
   
   ## save intermediate output ######
   write.csv2(GBIF_species, file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
-  # GBIF_species <- read.csv2("Data/Input/SpeciesGBIFkeys.csv")
+  # GBIF_species <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
   
   
   
@@ -91,7 +91,7 @@ request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=p
   
   ## save intermediate output #############################
   write.csv2(GBIF_species, file.path("Data","Output","Intermediate","SpeciesGBIFnRecords.csv"))
-  # GBIF_species <- read.csv2("Data/Input/SpeciesGBIFnRecords.csv")
+  # GBIF_species <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFnRecords.csv"))
   
   
   
@@ -123,6 +123,7 @@ request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=p
   
   counter <- 0
   x <- 1
+  file_downloads <- list()
   for (j in unique(GBIF_species$group)) {
     
     counter <- counter + 1                                         # counts the loop
@@ -143,8 +144,8 @@ request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=p
     sub_keys <- subset(GBIF_species,group==j)$speciesKey
     
     ## prepare requests for GBIF download (no execution!)
-    occ_download(
-      pred_in("taxonKey", sub_keys),
+    file_downloads[[j]] <- occ_download(
+      pred_in("taxonKey", 2501066),
       pred("hasCoordinate", TRUE),
       pred("hasGeospatialIssue", FALSE),
       format = "SIMPLE_CSV",
@@ -152,6 +153,7 @@ request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=p
     )
   }
   
+  save(file_downloads,file=file.path("Data","Output","GBIF_download_requests.RData"))
   
   # ### using one GBIF account and different queries #######################################################
   # ### the rgbif functions are beta versions and may not work as expected! ################################
@@ -185,3 +187,4 @@ request_GBIF_download <- function(name_of_specieslist,n_accounts,user=user,pwd=p
   
 }
 
+# dat <- readRDS("/home/hanno/Storage_large/GBIF/SInASdata/GBIFrecords_Cleaned_AllSInAS.rds")

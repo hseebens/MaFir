@@ -4,16 +4,16 @@ graphics.off()
 rm(list=ls())
 
 
-# library(data.table) # for clean_GBIF_records, request_GBIF_download
-# # library(zoo)
-# library(rgbif) # for clean_GBIF_records, request_GBIF_download
-# library(CoordinateCleaner) # for clean_GBIF_records
-# library(httr)
-# library(dismo)
+library(data.table) # for clean_GBIF_records, request_GBIF_download
+# library(zoo)
+library(rgbif) # for clean_GBIF_records, request_GBIF_download
+library(CoordinateCleaner) # for clean_GBIF_records
+library(httr)
+library(dismo)
 library(sf)   # for transform_coords_to_regions
-# library(worrms)
-# 
-# 
+library(worrms)
+
+
 ### Full path to GBIF download files ###################################
 ### Note: All files in that folder will be considered as relevant files
 path_to_GBIFdownloads <- "/home/hanno/Storage_large/GBIF/SInASdata/GBIF_230221"
@@ -41,52 +41,57 @@ source(file.path("R","request_GBIF_download.R")) # a function to decompress larg
 source(file.path("R","get_WoRMS_habitats.R")) # get habitat information from WoRMS
 source(file.path("R","coords_to_regions.R"))
 
-# ### Obtaining data #####################################################
-# ### send requests to GBIF ##############################################
-# 
-# ## GBIF account details ############
-# ## Note that multiple accounts are required for n_accounts>1.
-# ## The accounts have to numbered x=1...n_accounts, while x is part of 
-# ## user name and email address. For example, user name and email should be:
-# ## (ekinhanno1, ekinhanno1@gmail.com), (ekinhanno2, ekinhanno2@gmail.com) and so on.
-# 
-# n_accounts <- 7
-# 
-# ## login details for first account (x=1) (the '1' in user name and email 
-# ## address will be replaced be account number)
-# user <- "ekinhanno1"                                  # your gbif.org username
-# pwd <- "seebenskaplan1234"                                     # your gbif.org password (set the same password for all accounts for convenience)
-# email <- "ekinhanno1@outlook.com"                 # your email which you will recieve the download link
-# 
-# ## request GBIF downloads
-# request_GBIF_download(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email)
-# 
-# ### extract relevant information from GBIF downloads ###################
-# extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
-# 
-# 
-# ### get OBIS records ###################################################
-# 
-# # to be done...
-# 
-# 
-# ### Cleaning data ######################################################
-# ### clean GBIF records #################################################
-# 
-# ## High numbers of records may cause memory issues. The number of records
-# ## can be reduced by setting thin_records to TRUE. Then, coordinates are
-# ## rounded to the second digit and duplicates are removed. For the single
-# ## remaining record at this site, the original (not the rounded) record 
-# ## is kept. Thinning may result in imprecise results when the regions
-# ## considered later in the workflow are small.
-# thin_records <- T
-# 
-# clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
-# 
-# ### clean OBIS records #################################################
-# 
-# # to be done... necessary? apply coordinate cleaner to OBIS?
-# 
+### Obtaining data #####################################################
+### send requests to GBIF ##############################################
+
+## GBIF account details ############
+## Note that multiple accounts are required for n_accounts>1.
+## The accounts have to numbered x=1...n_accounts, while x is part of
+## user name and email address. For example, user name and email should be:
+## (ekinhanno1, ekinhanno1@gmail.com), (ekinhanno2, ekinhanno2@gmail.com) and so on.
+
+n_accounts <- 7
+
+## login details for first account (x=1) (the '1' in user name and email
+## address will be replaced be account number)
+user <- "ekinhanno1"                                  # your gbif.org username
+pwd <- "seebenskaplan1234"                                     # your gbif.org password (set the same password for all accounts for convenience)
+email <- "ekinhanno1@outlook.com"                 # your email which you will recieve the download link
+
+###################################
+
+## send requests to GBIF 
+send_GBIF_request(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email)
+
+## get downloads from GBIF (requires running 'send_GBIF_request' first)
+get_GBIF_download(path_to_GBIFdownloads)
+
+### extract relevant information from GBIF downloads ###################
+extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
+
+
+### get OBIS records ###################################################
+
+# to be done...
+
+
+### Cleaning data ######################################################
+### clean GBIF records #################################################
+
+## High numbers of records may cause memory issues. The number of records
+## can be reduced by setting thin_records to TRUE. Then, coordinates are
+## rounded to the second digit and duplicates are removed. For the single
+## remaining record at this site, the original (not the rounded) record
+## is kept. Thinning may result in imprecise results when the regions
+## considered later in the workflow are small.
+thin_records <- T
+
+clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
+
+### clean OBIS records #################################################
+
+# to be done... necessary? apply coordinate cleaner to OBIS?
+
 
 ########################################################################
 ### get alien regions based on coordintates ############################
@@ -100,7 +105,7 @@ checklist_to_marine <- TRUE
 
 # Region shapefile requires a consistent structure for marine and terrestrial polygons !!!!!
 
-coords_to_regions(name_of_TaxonLoc,name_of_shapefile,realm_extension,file_name_extension)
+dat <- coords_to_regions(name_of_TaxonLoc,name_of_shapefile,realm_extension,file_name_extension)
 
 
 ########################################################################
