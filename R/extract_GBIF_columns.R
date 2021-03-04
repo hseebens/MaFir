@@ -7,7 +7,7 @@
 
 
 
-extract_GBIF_columns <- function(path_to_GBIFdownloads){
+extract_GBIF_columns <- function(path_to_GBIFdownloads,file_name_extension){
   
   ############################################################################################
   ## list available zip files (all zip files in the respective will be considered as relevant)
@@ -26,14 +26,14 @@ extract_GBIF_columns <- function(path_to_GBIFdownloads){
   
   for (i in 1:length(extract_files)){#
     
-    print(paste(i,"Working on",extract_files[i]))
+    cat(paste0("\n ",i," Working on",extract_files[i],"\n"))
     
     key <- strsplit(extract_files[i],"-")[[1]][1]
     
     ## unzip files ###################################
     
-    if (!file.exists(paste0(getwd(),gsub("\\.zip","\\.csv",extract_files[i])))){ # check if file has been unzipped already 
-      try(gbif_raw <- decompress_file(getwd(),extract_files[i])) # try to unzip
+    if (!file.exists(paste0(path_to_GBIFdownloads,gsub("\\.zip","\\.csv",extract_files[i])))){ # check if file has been unzipped already 
+      try(gbif_raw <- decompress_file(path_to_GBIFdownloads,extract_files[i])) # try to unzip
     } 
     if (class(gbif_raw)=="try-error") next
     
@@ -43,7 +43,7 @@ extract_GBIF_columns <- function(path_to_GBIFdownloads){
     
     ## single file...
     # dat <- fread(file=paste0("FirstRecordsSpec/",unzipped),select=c("speciesKey","decimalLatitude","decimalLongitude","basisOfRecord","eventDate","year","dateIdentified"),quote="")
-    dat <- fread(file=paste0(unzipped),select=c("speciesKey","basisOfRecord","decimalLatitude","decimalLongitude"),quote="")
+    dat <- fread(file=file.path(path_to_GBIFdownloads,unzipped),select=c("speciesKey","basisOfRecord","decimalLatitude","decimalLongitude"),quote="")
     
     # ## multiple files...
     # dat <- fread(file=paste0("FirstRecordsSpec/",unzipped),select=ind_columns,quote="")
@@ -82,12 +82,14 @@ extract_GBIF_columns <- function(path_to_GBIFdownloads){
     ind <- is.na(dat_sub$speciesKey) | is.na(dat_sub$decimalLatitude) | is.na(dat_sub$decimalLongitude)
     dat_sub <- dat_sub[!ind,]
 
+    cat(paste0("\n  ",length(unique(dat_sub$speciesKey))," species for ","GBIFrecords_",file_name_extension,"_",key,"-",i,".rds \n"))
+    
     ## output ###########
-    saveRDS(dat_red,file = file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))
+    saveRDS(dat_sub,file = file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))
     
     ## remove unzipped file to save space ##############
     if (file.exists(file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))){
-      file.remove(paste0("",unzipped))
+      file.remove(file.path(path_to_GBIFdownloads,unzipped))
     }
   }
 }

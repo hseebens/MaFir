@@ -18,7 +18,7 @@ clean_GBIF_records <- function(
   GBIF_records_files <- allfiles[grepl("\\.rds",allfiles)]
 
   dat_all <- list()
-  for (i in 2:length(GBIF_records_files)){ # 
+  for (i in 1:length(GBIF_records_files)){ # 
     
     cat(paste0("\n ",i,": ",GBIF_records_files[i],"\n"))
     
@@ -141,7 +141,7 @@ clean_GBIF_records <- function(
         saveRDS(dat_cleaned,file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,"_",j,".rds")))
       }
       
-      # collect data stored to disk
+      # collect data store to disk
       dat_sub_all <- list()
       for (j in 1:length(group_lvl)){
         
@@ -181,6 +181,5 @@ clean_GBIF_records <- function(
   dat_all_df <- rbindlist(dat_all)
   
   saveRDS(dat_all_df, file.path("Data","Output",paste0("GBIFrecords_Cleaned_All",file_name_extension,".rds")))
-
 }
 

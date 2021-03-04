@@ -16,7 +16,7 @@ library(worrms)
 
 ### Full path to GBIF download files ###################################
 ### Note: All files in that folder will be considered as relevant files
-path_to_GBIFdownloads <- "/home/hanno/Storage_large/GBIF/SInASdata/GBIF_230221"
+path_to_GBIFdownloads <- "/home/hanno/Storage_large/GBIF/SInASdata/GBIF_030321"
 
 ## has to be stored in Data/Input/ and has to include a column named 'scientificName'
 ## for taxon names and 'Location' for region names and 'Taxon' (no authority) for habitat check
@@ -28,7 +28,7 @@ name_of_TaxonLoc <- "SInAS_AlienSpeciesDB_2.3.1.csv"
 ## name of shapefile providing polygons for the new delineation
 name_of_shapefile <- "terraqua"
 
-file_name_extension <- "SInAS"
+file_name_extension <- "SInAS_2"
 
 
 
@@ -37,7 +37,7 @@ file_name_extension <- "SInAS"
 source(file.path("R","decompress_file.R")) # a function to decompress large zip files
 source(file.path("R","extract_GBIF_columns.R")) # a function to extract from zipped GBIF downloads
 source(file.path("R","clean_GBIF_records.R")) # a function to clean GBIF records
-source(file.path("R","request_GBIF_download.R")) # a function to decompress large zip files
+source(file.path("R","send_GBIF_request.R")) # a function to decompress large zip files
 source(file.path("R","get_WoRMS_habitats.R")) # get habitat information from WoRMS
 source(file.path("R","coords_to_regions.R"))
 

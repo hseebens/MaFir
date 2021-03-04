@@ -120,6 +120,8 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   ### account. The first is less convenient but stable, while the latter is a beta version
   
   ### using various GBIF accounts #######################################################
+  user_base <- user
+  email_base <- email
   
   counter <- 0
   x <- 1
@@ -132,9 +134,9 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
     ## in this case, we opened accounts and emails such as:
     ## (ekinhanno1, ekinhanno1@gmail.com), (ekinhanno2, ekinhanno2@gmail.com) and so on for convenience.
     
-    user <- gsub("1",x,user)                                  # your gbif.org username
-    email <- gsub("1",x,email)                 # your email which you will recieve the download link
-    
+    user <- gsub("1",x,user_base)                  # your gbif.org username
+    email <- gsub("1",x,email_base)                # your email which you will recieve the download link
+
     if (counter %% 3 == 0){                                        # every time counter can be divided by 3,
       x <- x + 1                                                   # set x + 1 => select new GBIF account below.
     }                                                              # note that GBIF API allows up to
@@ -145,7 +147,7 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
     
     ## prepare requests for GBIF download (no execution!)
     file_downloads[[j]] <- occ_download(
-      pred_in("taxonKey", 2501066),
+      pred_in("taxonKey", sub_keys),
       pred("hasCoordinate", TRUE),
       pred("hasGeospatialIssue", FALSE),
       format = "SIMPLE_CSV",
