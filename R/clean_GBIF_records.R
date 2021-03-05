@@ -105,6 +105,9 @@ clean_GBIF_records <- function(
                                                                 "zeros"),
                                                       outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'          
           }
+          
+          cat(paste0("\n Data split into pieces for ",length(spec_manyrecords)," species.\n"))
+          
           for (l in 1:length(spec_manyrecords)){ # loop over species with many records
             
             # cat(paste0("\n Data split into pieces for species ",spec_manyrecords[l],"! \n"))

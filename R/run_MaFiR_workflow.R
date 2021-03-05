@@ -4,6 +4,13 @@ graphics.off()
 rm(list=ls())
 
 
+
+## CHECK (marine = terrestrial names): Vanuatu, Cape Verde, New Caledonia, Maldives,Seychelles, Marshall Islands, Easter Island, Bermuda
+ 
+## keep Source in workflow
+
+
+
 library(data.table) # for clean_GBIF_records, request_GBIF_download
 # library(zoo)
 library(rgbif) # for clean_GBIF_records, request_GBIF_download
@@ -39,7 +46,9 @@ source(file.path("R","extract_GBIF_columns.R")) # a function to extract from zip
 source(file.path("R","clean_GBIF_records.R")) # a function to clean GBIF records
 source(file.path("R","send_GBIF_request.R")) # a function to decompress large zip files
 source(file.path("R","get_WoRMS_habitats.R")) # get habitat information from WoRMS
-source(file.path("R","coords_to_regions.R"))
+source(file.path("R","coords_to_regions.R")) # identify region for each coordinate
+source(file.path("R","add_first_records.R")) # add first records per species and region (if available)
+
 
 ### Obtaining data #####################################################
 ### send requests to GBIF ##############################################
@@ -101,7 +110,7 @@ clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
 realm_extension <- TRUE 
 
 ## assigning country checklists to marine polygons
-checklist_to_marine <- TRUE
+# checklist_to_marine <- TRUE
 
 # Region shapefile requires a consistent structure for marine and terrestrial polygons !!!!!
 
@@ -110,5 +119,5 @@ dat <- coords_to_regions(name_of_TaxonLoc,name_of_shapefile,realm_extension,file
 
 ########################################################################
 ## add first records per region (requires 'eventDate' column) ##########
-add_first_records(file_name_extension)
+add_first_records(file_name_extension,name_of_TaxonLoc)
 

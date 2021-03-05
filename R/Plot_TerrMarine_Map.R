@@ -5,7 +5,7 @@ rm(list=ls())
 library(sf)
 library(shape)
 
-setwd("/home/hanno/Bioinvasion/InvAccu/MarineExpansion/Workflow/")
+setwd("/home/hanno/Bioinvasion/InvAccu/MarineExpansion/MaFir_Workflow/")
 
 source("../../../SpatialSpread/owncolleg.r") # adjusted color legend
 
@@ -17,8 +17,8 @@ all_regspec_fr <- read.table("Data/FirstRecords_TerrMarRegions_min3.csv",sep=";"
 # all_regspec_fr <- read.table("../../Others/EkinInternship/FirstRecords_TerrMarRegions_min5.csv",sep=";",header=T,stringsAsFactors = F)
 
 ## Polygon file of marine and terrestrial regions
-regions <- st_read(dsn="Data/Shapefiles",layer="terraqua",stringsAsFactors = F)
-marine_regions <- st_read(dsn="Data/Shapefiles",layer="MEOW_NoOverlap_combined",stringsAsFactors = F)
+regions <- st_read(dsn="Data/Input/Shapefiles",layer="terraqua",stringsAsFactors = F)
+marine_regions <- st_read(dsn="Data/Input/Shapefiles",layer="MEOW_NoOverlap_combined",stringsAsFactors = F)
 
 ## change projection to Robinson
 crs <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m" # Robinson projection

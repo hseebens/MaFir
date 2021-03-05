@@ -24,29 +24,32 @@ coords_to_regions <- function(
   GBIF_specieskeys <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
   
   ## Taxon list
-  # SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
-  SpecNames <- read.table(file.path("Data","Intermediate",paste0("Habitats_",name_of_specieslist)),stringsAsFactors = F)
+  SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
   
-  if (realm_extension){ # check if realms should be identified
-    
-    if (!all(c("Habitat_marine","Habitat_freshwater","Habitat_terrestrial")%in%colnames(SpecNames))){ # check if required columns exist, if not, download data from WoRMS
-      
-      cat("\n 'realm_extension' requires information about habitats from WoRMS.")
+  if (realm_extension  # check if realms should be identified
+      & !file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
+      & !all(c("Habitat_marine","Habitat_freshwater","Habitat_terrestrial")%in%colnames(SpecNames))){ # check if required columns exist, if not, download data from WoRMS
+
+      cat("\n 'realm_extension==TRUE' requires information about habitats from WoRMS.")
       cat("\n If not provided in the taxon file, it will be obtained now. \n")
       
       SpecNames <- get_WoRMS_habitats(SpecNames) # get habitats for species in WoRMS
       
-      write.table(SpecNames,file.path("Data","Intermediate",paste0("Habitats_",name_of_specieslist)))
-    }
+      write.table(SpecNames,file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
   }
-  
+
+  ## load taxon list with habitats if existing
+  if (realm_extension & file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))){
+    SpecNames <- read.table(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)),stringsAsFactors = F)
+  }
+
   SpecNames <- merge(SpecNames,GBIF_specieskeys[,c("scientificName","speciesKey")],by="scientificName")  
   
   ## Taxon x region database 
   SpecRegionData <-  read.table(file.path("Data","Input",name_of_TaxonLoc),stringsAsFactors = F,header=T)
   
   ## get GBIF species keys
-  GBIF_specieskeys <- read.csv2(file.path("Data","Intermediate","SpeciesGBIFkeys.csv"))
+  GBIF_specieskeys <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
 
   SpecRegionData_keys <- merge(SpecRegionData,GBIF_specieskeys[,c("scientificName","speciesKey")],by="scientificName")  
   uni_spec <- unique(SpecRegionData_keys[,c("scientificName","speciesKey")])
@@ -57,6 +60,7 @@ coords_to_regions <- function(
   
   ## Polygon file of marine and terrestrial regions
   regions <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer=name_of_shapefile,stringsAsFactors = F)
+  regions$ECOREGION[!is.na(regions$ECOREGION)] <- paste(regions$ECOREGION[!is.na(regions$ECOREGION)],"MEOW",sep="_")
   
   if (realm_extension){
     regions$Realm <- NA
@@ -84,8 +88,9 @@ coords_to_regions <- function(
     ## add marine ecoregions to taxon-region pairs 
     marine_terr_recs <- merge(neighbours,SpecRegionData_keys,by="Location")
     marine_speckeys <- unique(marine_terr_recs[,c("MEOW","speciesKey")])
-    meow_records <- unique(marine_terr_recs[,c("MEOW","scientificName","speciesKey")])#,"Source"
-    saveRDS(meow_records,file.path("Data","Intermediate","MarineRecords.rds"))
+    meow_records <- unique(marine_terr_recs[,c("MEOW","scientificName","speciesKey","eventDate")])#,"Source"
+    saveRDS(meow_records,file.path("Data","Output","Intermediate","MarineRecords.rds"))
+    
     TaxonRegionPairs <- c(TaxonRegionPairs,paste(marine_speckeys$speciesKey,marine_speckeys$MEOW,sep="_"))
   
     ## list species which are clearly non-marine, clearly marine and clearly freshwater ######
@@ -109,8 +114,8 @@ coords_to_regions <- function(
   ## Identify in which region coordinates fall ############################
   
   ## check available files in folder 'Intermediate' or 'Output' ##################
-  folder <- "Intermediate"
-  available_files <- list.files(file.path("Data","Intermediate"))
+  folder <- file.path("Output","Intermediate")
+  available_files <- list.files(file.path("Data","Output","Intermediate"))
   available_files <- available_files[grep("GBIFrecords_Cleaned_",available_files)]
   if (length(available_files)==0){
     folder <- "Output"
@@ -130,11 +135,7 @@ coords_to_regions <- function(
     
     # Import processed GBIF files
     all_coords <- readRDS(file.path("Data",folder,available_files[i])) #rdsfile
-    # if (i==22){
-    #   all_coords <- readRDS("RobisCoordinates.rds") #rdsfile
-    #   colnames(all_coords)[colnames(all_coords)=="id"] <- "speciesKey"
-    # } 
-    
+
     # Transform to sf object
     coords_sf <- st_as_sf(all_coords,coords=c("decimalLongitude","decimalLatitude"),crs=st_crs(regions))
     
@@ -200,7 +201,7 @@ coords_to_regions <- function(
       # tab_realm[which(rownames(tab_realm)=="5277297"),]
       
       ## output ###############
-      saveRDS(output,file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
+      saveRDS(output,file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
       
       chunk_out[[j]] <- output
     }
@@ -220,27 +221,27 @@ coords_to_regions <- function(
   all_records_spec$Realm[all_records_spec$speciesKey%in%freshwater] <- "freshwater"
   
   # ## output ###############
-  saveRDS(all_records_spec,file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
+  saveRDS(all_records_spec,file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
+  # all_records_spec <- readRDS(file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
   
   ## remove intermediate files if previous saving was successful
-  if (file.exists(file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))){
+  if (file.exists(file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))){
     for (i in 1:nchunks){ # loop over all chunks of coordinate data
       for (j in 1:(length(steps)-1)){# 
-        file.remove(file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
+        file.remove(file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
       }
     }
   }
-  return(all_records_spec)
+  # return(all_records_spec)
 }
 
-# all_records_spec <-  readRDS(file.path("Data","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
-
-
+# all_records_spec <-  readRDS(file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
+# 
 # x <- 0
 # all_out <- list()
 # for (i in 1:21){
 #   # x <- x + 1
-#   # regs_species <- readRDS(paste0("GBIF_First_Records_",i,".rds"))
+#   # regs_species <- readRDS(paste0("/home/hanno/Bioinvasion/Others/EkinInternship/GBIF_First_Records_",i,".rds"))
 #   # all_out[[x]] <- regs_species
 #   for (j in 1:9){
 #     x <- x + 1
@@ -248,19 +249,19 @@ coords_to_regions <- function(
 #     regs_species <- readRDS(paste0("FirstRecords_Coords_min5",i,"_",j,".rds"))
 #     regs_species <- regs_species[,c("speciesKey","Region","Realm")]
 #     regs_species <- regs_species[!duplicated(regs_species),]
-#     
+# 
 #     all_out[[x]] <- regs_species
 #   }
 # }
 # regs_species <- unique(do.call("rbind",all_out))
 # # saveRDS(regs_species,"FirstRecords_Coords_min5.rds")
-# all_records_spec <- readRDS("FirstRecords_Coords_min5.rds")
-
-
+# all_records_spec <- readRDS("/home/hanno/Bioinvasion/Others/EkinInternship/FirstRecords_Coords_min5.rds")
+# 
+# 
 # ## add first records to marine species-regions combination #######################
 # colnames(all_records_spec)[colnames(all_records_spec)=="Region"] <- "MEOW"
 # if (any(grepl("FirstRecord",colnames(all_records_spec)))) all_records_spec <- all_records_spec[,-grep("FirstRecord",colnames(regs_species))]
-# marine_regs_species <- merge(all_records_spec,meow_records[,-which(colnames(meow_records)=="Species")],by=c("speciesKey","MEOW"))
+# marine_regs_species <- merge(all_records_spec,meow_records[,-which(colnames(meow_records)=="scientificName")],by=c("speciesKey","MEOW"))
 # marine_regs_species <- subset(marine_regs_species,Realm=="marine")
 # marine_regspec_fr <- aggregate(FirstRecord ~ MEOW + Species + speciesKey + Realm + Source,data=marine_regs_species,FUN=min)
 # 
