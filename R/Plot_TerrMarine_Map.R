@@ -12,13 +12,14 @@ source("../../../SpatialSpread/owncolleg.r") # adjusted color legend
 
 ### load data ###############################################################
 
-# all_regspec_fr <- read.table("Data/FirstRecords_TerrMarRegions.csv",sep=";",header=T,stringsAsFactors = F)
-all_regspec_fr <- read.table("Data/FirstRecords_TerrMarRegions_min3.csv",sep=";",header=T,stringsAsFactors = F)
-# all_regspec_fr <- read.table("../../Others/EkinInternship/FirstRecords_TerrMarRegions_min5.csv",sep=";",header=T,stringsAsFactors = F)
+all_regspec_fr <- read.table("Data/Output/AlienRegionsFirstRecords_SInAS_2.csv",sep=";",header=T,stringsAsFactors = F)
+# all_regspec_fr <- read.table("Data/FirstRecords_TerrMarRegions_min3.csv",sep=";",header=T,stringsAsFactors = F)
+# all_regspec_fr <- read.table("../../../Others/EkinInternship/FirstRecords_TerrMarRegions_min5.csv",sep=";",header=T,stringsAsFactors = F)
 
 ## Polygon file of marine and terrestrial regions
 regions <- st_read(dsn="Data/Input/Shapefiles",layer="terraqua",stringsAsFactors = F)
 marine_regions <- st_read(dsn="Data/Input/Shapefiles",layer="MEOW_NoOverlap_combined",stringsAsFactors = F)
+marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)] <- paste(marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)],"MEOW",sep="_")
 
 ## change projection to Robinson
 crs <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m" # Robinson projection
@@ -31,6 +32,7 @@ regions$Realm <- NA
 regions$Realm[!is.na(regions$ECOREGION)] <- "marine"
 regions$Realm[!is.na(regions$Region)] <- "terrestrial"
 
+regions$ECOREGION[!is.na(regions$ECOREGION)] <- paste(regions$ECOREGION[!is.na(regions$ECOREGION)],"MEOW",sep="_")
 regions$Region[!is.na(regions$ECOREGION)] <- regions$ECOREGION[!is.na(regions$ECOREGION)]
 # regions$Region[!is.na(regions$featurecla)] <- regions$name[!is.na(regions$featurecla)]
 regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
@@ -39,9 +41,9 @@ regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien dis
 
 
 ### plot results #######################################################
-terr_timeseries <- as.data.frame(table(subset(all_regspec_fr,Realm=="terrestrial")$FirstRecord),stringsAsFactors = F)
-marine_timeseries <- as.data.frame(table(subset(all_regspec_fr,Realm=="marine")$FirstRecord),stringsAsFactors = F)
-fresh_timeseries <- as.data.frame(table(subset(all_regspec_fr,Realm=="freshwater")$FirstRecord),stringsAsFactors = F)
+terr_timeseries <- as.data.frame(table(subset(all_regspec_fr,Realm=="terrestrial")$eventDate),stringsAsFactors = F)
+marine_timeseries <- as.data.frame(table(subset(all_regspec_fr,Realm=="marine")$eventDate),stringsAsFactors = F)
+fresh_timeseries <- as.data.frame(table(subset(all_regspec_fr,Realm=="freshwater")$eventDate),stringsAsFactors = F)
 
 x11(width=10,height=3)
 op <- par(oma=c(1,1,0,0),mfrow=c(1,3),mar=c(2,2,2,1),mgp=c(1.5,0.5,0),cex=1,las=1,tck=-0.03)
@@ -80,8 +82,9 @@ par(op)
 ## world map ###################################
 library(RColorBrewer)
 
-nspec_reg <- aggregate(speciesKey ~ Region + Realm,data=all_regspec_fr,FUN=length)
+nspec_reg <- aggregate(speciesKey ~ Location + Realm,data=all_regspec_fr,FUN=length)
 colnames(nspec_reg)[dim(nspec_reg)[2]] <- "nSpec"
+colnames(nspec_reg)[1] <- "Region"
 # nspec_reg$nSpec[nspec_reg$nSpec>2000] <- 2000
 
 
@@ -91,7 +94,7 @@ spatial_nspec <- merge(regions,nspec_reg,by=c("Region","Realm"),all.x=T)
 
 
 ### colour coding ######
-spatial_nspec$nSpec <- log(spatial_nspec$nSpec+1)
+# spatial_nspec$nSpec <- log(spatial_nspec$nSpec+1)
 
 ind_terr <- spatial_nspec$Realm=="terrestrial" | spatial_nspec$Realm=="freshwater" 
 spatial_nspec$col_norm[ind_terr] <- round(spatial_nspec$nSpec[ind_terr]/max(spatial_nspec$nSpec[ind_terr],na.rm=T)*99)+1

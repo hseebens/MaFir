@@ -5,10 +5,8 @@ rm(list=ls())
 
 
 
-## CHECK (marine = terrestrial names): Vanuatu, Cape Verde, New Caledonia, Maldives,Seychelles, Marshall Islands, Easter Island, Bermuda
- 
-## keep Source in workflow
 
+## Note: keep Source in workflow
 
 
 library(data.table) # for clean_GBIF_records, request_GBIF_download
@@ -119,5 +117,5 @@ dat <- coords_to_regions(name_of_TaxonLoc,name_of_shapefile,realm_extension,file
 
 ########################################################################
 ## add first records per region (requires 'eventDate' column) ##########
-add_first_records(file_name_extension,name_of_TaxonLoc)
+dat <- add_first_records(file_name_extension,name_of_TaxonLoc)
 

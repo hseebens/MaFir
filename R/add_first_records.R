@@ -44,4 +44,7 @@ add_first_records <- function(
   ## output ###################################################
   write.table(all_regspec_fr,file.path("Data","Output",paste0("AlienRegionsFirstRecords_",file_name_extension,".csv")),sep=";",row.names=F)
   all_regspec_fr <- read.table(file.path("Data","Output",paste0("AlienRegionsFirstRecords_",file_name_extension,".csv")),sep=";",header=T,stringsAsFactors = F)
+  # all_regspec_fr <- readRDS(file.path("Data","FirstRecords_TerrMarRegions_min3.rds"))
+
+  return(all_regspec_fr)
 }

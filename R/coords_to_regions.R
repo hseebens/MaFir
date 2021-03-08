@@ -61,6 +61,7 @@ coords_to_regions <- function(
   ## Polygon file of marine and terrestrial regions
   regions <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer=name_of_shapefile,stringsAsFactors = F)
   regions$ECOREGION[!is.na(regions$ECOREGION)] <- paste(regions$ECOREGION[!is.na(regions$ECOREGION)],"MEOW",sep="_")
+  regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
   
   if (realm_extension){
     regions$Realm <- NA
@@ -69,11 +70,11 @@ coords_to_regions <- function(
     
     regions$Region[!is.na(regions$ECOREGION)] <- regions$ECOREGION[!is.na(regions$ECOREGION)]
     # regions$Region[!is.na(regions$featurecla)] <- regions$name[!is.na(regions$featurecla)]
-    regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
     
     ## Terrestrial to marine ecoregion file
     neighbours <- read.table(file.path("Data","Input","Combined MEOW List_Hanno.csv"),sep=";",header=T)
     neighbours <- subset(neighbours,Action!="remove")
+    neighbours$MEOW <- paste(neighbours$MEOW,"MEOW",sep="_")
     colnames(neighbours) <- c("Location","MEOW","Action") ## ADJUST shapefile AND REMOVE!!!!!!!!!!!!!!!!!!!!
   }
   
@@ -146,7 +147,7 @@ coords_to_regions <- function(
     for (j in 1:(length(steps)-1)){# 
       all_counter <- all_counter + 1
       
-      print(paste0(round(all_counter/(nsteps*nchunks)*100,2),"%"))
+      print(paste0(round(all_counter/((nsteps-1)*nchunks)*100,2),"%"))
       
       ## identify region of occurrence
       ptspoly <- st_join(coords_sf[steps[j]:steps[j+1],],regions)
@@ -201,7 +202,7 @@ coords_to_regions <- function(
       # tab_realm[which(rownames(tab_realm)=="5277297"),]
       
       ## output ###############
-      saveRDS(output,file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
+      # saveRDS(output,file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
       
       chunk_out[[j]] <- output
     }
@@ -210,7 +211,7 @@ coords_to_regions <- function(
     all_out[[i]] <- chunk_records
     
     ## output ###############
-    # saveRDS(chunk_records,paste0("GBIF_First_Records_",i,".rds"))
+    saveRDS(chunk_records,file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,".rds")))
   }
   all_records <- do.call("rbind",all_out)
   all_records <- unique(all_records)
