@@ -17,6 +17,8 @@ library(httr)
 library(dismo)
 library(sf)   # for transform_coords_to_regions
 library(worrms)
+library(robis)
+library(dplyr)
 
 
 ### Full path to GBIF download files ###################################
@@ -79,7 +81,7 @@ extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 
 ### get OBIS records ###################################################
 
-# to be done...
+big_robis(path_to_frdb, colname)
 
 
 ### Cleaning data ######################################################
