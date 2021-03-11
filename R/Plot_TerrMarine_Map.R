@@ -17,25 +17,25 @@ all_regspec_fr <- read.table("Data/Output/AlienRegionsFirstRecords_SInAS_2.csv",
 # all_regspec_fr <- read.table("../../../Others/EkinInternship/FirstRecords_TerrMarRegions_min5.csv",sep=";",header=T,stringsAsFactors = F)
 
 ## Polygon file of marine and terrestrial regions
-regions <- st_read(dsn="Data/Input/Shapefiles",layer="terraqua",stringsAsFactors = F)
-marine_regions <- st_read(dsn="Data/Input/Shapefiles",layer="MEOW_NoOverlap_combined",stringsAsFactors = F)
-marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)] <- paste(marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)],"MEOW",sep="_")
+regions <- st_read(dsn="Data/Input/Shapefiles",layer="RegionsTerrMarine",stringsAsFactors = F)
+# marine_regions <- st_read(dsn="Data/Input/Shapefiles",layer="MEOW_NoOverlap_combined",stringsAsFactors = F)
+# marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)] <- paste(marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)],"MEOW",sep="_")
 
 ## change projection to Robinson
 crs <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m" # Robinson projection
 regions <- st_wrap_dateline(regions, options = c("WRAPDATELINE=YES"))
 regions <- st_transform(regions,crs)
-marine_regions <- st_wrap_dateline(marine_regions, options = c("WRAPDATELINE=YES"))
-marine_regions <- st_transform(marine_regions,crs)
+# marine_regions <- st_wrap_dateline(marine_regions, options = c("WRAPDATELINE=YES"))
+# marine_regions <- st_transform(marine_regions,crs)
 
-regions$Realm <- NA
-regions$Realm[!is.na(regions$ECOREGION)] <- "marine"
-regions$Realm[!is.na(regions$Region)] <- "terrestrial"
+# regions$Realm <- NA
+# regions$Realm[!is.na(regions$ECOREGION)] <- "marine"
+# regions$Realm[!is.na(regions$Region)] <- "terrestrial"
 
-regions$ECOREGION[!is.na(regions$ECOREGION)] <- paste(regions$ECOREGION[!is.na(regions$ECOREGION)],"MEOW",sep="_")
-regions$Region[!is.na(regions$ECOREGION)] <- regions$ECOREGION[!is.na(regions$ECOREGION)]
+regions$Location[!is.na(regions$Ecoregion)] <- paste(regions$Ecoregion[!is.na(regions$Ecoregion)],"MEOW",sep="_")
+# regions$Region[!is.na(regions$Ecoregion)] <- regions$Ecoregion[!is.na(regions$Ecoregion)]
 # regions$Region[!is.na(regions$featurecla)] <- regions$name[!is.na(regions$featurecla)]
-regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
+# regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
 
 
 
@@ -82,13 +82,13 @@ par(op)
 ## world map ###################################
 library(RColorBrewer)
 
-nspec_reg <- aggregate(speciesKey ~ Location + Realm,data=all_regspec_fr,FUN=length)
+nspec_reg <- aggregate(scientificName ~ Location + Realm,data=all_regspec_fr,FUN=length)
 colnames(nspec_reg)[dim(nspec_reg)[2]] <- "nSpec"
-colnames(nspec_reg)[1] <- "Region"
+# colnames(nspec_reg)[1] <- "Region"
 # nspec_reg$nSpec[nspec_reg$nSpec>2000] <- 2000
 
 
-spatial_nspec <- merge(regions,nspec_reg,by=c("Region","Realm"),all.x=T)
+spatial_nspec <- merge(regions,nspec_reg,by=c("Location","Realm"),all.x=T)
 # spatial_nspec$nSpec[is.na(spatial_nspec$nSpec)] <- 0
 # spatial_nspec <- spatial_nspec[!is.na(spatial_nspec$x),]
 

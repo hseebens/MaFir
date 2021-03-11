@@ -69,7 +69,7 @@ coords_to_regions_GBIF <- function(
   # regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
   
   ## standardise location names 
-  newLocNames <- standardise_location_names(regions$Location,file_name_extension,data_set="Shapefile")
+  newLocNames <- standardise_location_names(regions$Location,data_set="Shapefile")
   if (nrow(newLocNames)!=nrow(regions)){
     stop("\n Standardisation of location names went wrong. Check standardise_location_names.R in coords_to_regions.R \n")
   } 
@@ -80,10 +80,6 @@ coords_to_regions_GBIF <- function(
     regions$Realm[!is.na(regions$Ecoregion)] <- "marine"
     regions$Realm[!is.na(regions$Region)] <- "terrestrial"
 
-    regions$Location <- regions$Region
-    regions$Location[!is.na(regions$Ecoregion)] <- regions$Ecoregion[!is.na(regions$Ecoregion)]
-    # regions$Region[!is.na(regions$featurecla)] <- regions$name[!is.na(regions$featurecla)]
-    
     ## Terrestrial to marine ecoregion file
     neighbours <- read.table(file.path("Data","Input","Combined MEOW List_Hanno.csv"),sep=";",header=T)
     neighbours <- subset(neighbours,Action!="remove")
@@ -166,7 +162,7 @@ coords_to_regions_GBIF <- function(
       ptspoly <- st_join(coords_sf[steps[j]:steps[j+1],],regions)
       
       ## identify and keep only alien records
-      ptspoly$SpeciesRegion <- paste(ptspoly$speciesKey,ptspoly$Region,sep="_")
+      ptspoly$SpeciesRegion <- paste(ptspoly$speciesKey,ptspoly$Location,sep="_")
       ptspoly_alien <- ptspoly[ptspoly$SpeciesRegion%in%TaxonRegionPairs,]
       
       ## export
