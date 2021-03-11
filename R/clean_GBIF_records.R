@@ -32,11 +32,9 @@ clean_GBIF_records <- function(
     nonnumeric <- is.na(as.numeric(dat_sub$speciesKey)) | is.na(as.numeric(dat_sub$decimalLatitude)) | is.na(as.numeric(dat_sub$decimalLongitude))
     if (any(nonnumeric)){
       dat_sub <- dat_sub[!nonnumeric,]
-      
-      dat_sub$speciesKey <- as.numeric(dat_sub$speciesKey)
-      dat_sub$decimalLatitude <- as.numeric(dat_sub$decimalLatitude)
-      dat_sub$decimalLongitude <- as.numeric(dat_sub$decimalLongitude)
     }
+    dat_sub$decimalLatitude <- as.numeric(dat_sub$decimalLatitude)
+    dat_sub$decimalLongitude <- as.numeric(dat_sub$decimalLongitude)
     
     # remove wrong coordinates
     ind <- (dat_sub$decimalLatitude>90 | dat_sub$decimalLatitude< -90) |  (dat_sub$decimalLongitude>180 | dat_sub$decimalLongitude< -180)
@@ -47,9 +45,9 @@ clean_GBIF_records <- function(
     dat_sub <- dat_sub[!ind,]
     
     # remove inprecise coordinates
-    ind <- nchar(dat_sub$decimalLatitude)<5
+    ind <- nchar(sub('[0-9]+\\.', '', dat_sub$decimalLatitude))<2
     dat_sub <- dat_sub[!ind,]
-    ind <- nchar(dat_sub$decimalLongitude)<5
+    ind <- nchar(sub('[0-9]+\\.', '', dat_sub$decimalLongitude))<2
     dat_sub <- dat_sub[!ind,]
     
     n_split <- 10^6 # number of records per individual chunks (roughly)

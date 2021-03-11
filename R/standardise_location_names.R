@@ -1,8 +1,8 @@
 
 
-standardise_location_names <- function(dat,file_name_extension){
+standardise_location_names <- function(dat,file_name_extension,data_set){
 
-  dat <- SpecRegionData$Location
+  # dat <- SpecRegionData$Location
   
   dat <- cbind.data.frame(dat,dat,1:length(dat),stringsAsFactors=F)  
   colnames(dat) <- c("Location","Location_orig","order")
@@ -56,6 +56,8 @@ standardise_location_names <- function(dat,file_name_extension){
   dat_regnames <- merge(dat,regions[,c("locationID","Location")],by="Location",all.x=T)
   dat_regnames <- dat_regnames[order(dat_regnames$order),]
   dat_regnames <- dat_regnames[,c("Location","Location_orig","locationID")]
+  
+  dat_regnames$Location[is.na(dat_regnames$Location)] <- dat_regnames$Location_orig[is.na(dat_regnames$Location)] 
   
   ## output ###############################################################################
   
