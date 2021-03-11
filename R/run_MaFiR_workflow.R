@@ -17,8 +17,6 @@ library(httr)
 library(dismo)
 library(sf)   # for transform_coords_to_regions
 library(worrms)
-library(robis)
-library(dplyr)
 
 
 ### Full path to GBIF download files ###################################
@@ -48,6 +46,8 @@ source(file.path("R","send_GBIF_request.R")) # a function to decompress large zi
 source(file.path("R","get_WoRMS_habitats.R")) # get habitat information from WoRMS
 source(file.path("R","coords_to_regions.R")) # identify region for each coordinate
 source(file.path("R","add_first_records.R")) # add first records per species and region (if available)
+source(file.path("R","standardise_location_names.R")) # standardise location names (for matching with shapefile)
+source(file.path("R","create_shapefile.R")) # create shapefile of marine and terrestrial polygons
 
 
 ### Obtaining data #####################################################
@@ -81,7 +81,7 @@ extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 
 ### get OBIS records ###################################################
 
-big_robis(path_to_frdb, colname)
+# to be done...
 
 
 ### Cleaning data ######################################################
@@ -105,6 +105,14 @@ clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
 ########################################################################
 ### get alien regions based on coordintates ############################
 
+## Create shapefile of terrestrial and marine polygons
+## loads and combines shapefiles and stores the final shapefile in Data/Input/Shapefiles
+terrestrial_polygons <- "RegionsShapefile_200121" # name of terrestrial shapefile
+marine_polygons <- "meow_ecos" # name of marine shapefile
+
+create_shapefile(terrestrial_polygons,marine_polygons)
+
+
 ## Assign coordinates to different realms (terrestrial, freshwater, marine)
 ## depending on geographic location and additional tests
 realm_extension <- TRUE 
@@ -120,4 +128,7 @@ dat <- coords_to_regions(name_of_TaxonLoc,name_of_shapefile,realm_extension,file
 ########################################################################
 ## add first records per region (requires 'eventDate' column) ##########
 dat <- add_first_records(file_name_extension,name_of_TaxonLoc)
+
+
+
 

@@ -48,6 +48,14 @@ coords_to_regions <- function(
   ## Taxon x region database 
   SpecRegionData <-  read.table(file.path("Data","Input",name_of_TaxonLoc),stringsAsFactors = F,header=T)
   
+  ## standardise location names 
+  newLocNames <- standardise_location_names(SpecRegionData$Location,file_name_extension)
+  if (nrow(newLocNames)!=nrow(SpecRegionData)){
+    stop("\n Standardisation of location names went wrong. Check standardise_location_names.R in coords_to_regions.R \n")
+  } 
+  SpecRegionData$Location <- newLocNames$Location
+  # ind <- which(SpecRegionData$Location!=newLocNames$Location)
+  
   ## get GBIF species keys
   GBIF_specieskeys <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
 

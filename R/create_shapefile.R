@@ -1,0 +1,79 @@
+## Load and merge terrestrial and marine shapefiles
+
+create_shapefile <- function(terrestrial_polygons,marine_polygons){
+  
+  ## load shapefiles ##########################
+  ## terretrial ###########
+  regs_shp <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer=terrestrial_polygons,stringsAsFactors = F)
+  # regs_shp <- st_read(dsn="InvAccu/MarineExpansion/MaFir_Workflow/Data/Input/Shapefiles/",layer="SInAS_Locations",stringsAsFactors = F)
+  regs_shp <- st_buffer(regs_shp,dist=0)
+  
+  ## marine ###########
+  # meow_shp <- readOGR(dsn="../DATA/Regions/MEOW",layer="meow_ecos",stringsAsFactors = F)
+  meow_shp <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer=marine_polygons,stringsAsFactors = F)
+  
+  ## freshwater (not implemented yet) ###########
+  # lake <- st_read(dsn=file.path("Data","Input","Shapefiles"), layer = "ne_10m_lakes", stringsAsFactors = F)
+  
+  
+  ## change projection to Robinson
+  crs <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m" # Robinson projection
+  meow_shp <- st_wrap_dateline(meow_shp, options = c("WRAPDATELINE=YES"))
+  meow_shp <- st_transform(meow_shp,crs)
+  regs_shp <- st_wrap_dateline(regs_shp, options = c("WRAPDATELINE=YES"))
+  regs_shp <- st_transform(regs_shp,crs)
+  
+  ## identify neighbouring (overlapping marine and terrestrial regions) #########
+  inters_poly <- st_intersects(regs_shp,meow_shp) # intersect both shapefiles
+  inters_df <- as.data.frame(inters_poly)
+  colnames(inters_df) <- c("Location","MarineEcoregion")
+  
+  ## replace row IDs by names
+  inters_df$Location <- regs_shp$Location[inters_df$Location] 
+  inters_df$MarineEcoregion <- meow_shp$ECOREGION[inters_df$MarineEcoregion]
+  # write.table(inters_df,file.path("Data","Regions","NeighbouringPolygons.csv"))
+  
+  ### remove overlaps and merge ##################################################
+  ## generate one single spatial object (feature in sf language) (requires a buffer to close minor gaps)
+  # one_regs_poly <- st_union(st_buffer((regs_shp),dist=0.05))
+  # # st_write(one_regs_poly,dsn="Data/Regions/",layer="One_regs_poly",driver="ESRI Shapefile",delete_layer=T)## output
+  one_regs_poly <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer="One_regs_poly",stringsAsFactors = F)
+  one_regs_poly <- st_wrap_dateline(one_regs_poly, options = c("WRAPDATELINE=YES"))
+  one_regs_poly <- st_transform(one_regs_poly,crs)
+  one_regs_poly <- st_buffer(one_regs_poly,dist=0)
+  
+  meow_shp <- st_buffer(meow_shp,dist=0)
+  
+  
+  ## remove terrestrial part from marine polgons
+  marine <- st_difference(meow_shp,one_regs_poly)
+  
+  # st_write(marine,dsn=file.path("Data","Input","Shapefiles"),layer="MEOW_NoOverlap_combined",driver="ESRI Shapefile",delete_layer=T) ## output
+  # marine <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer="MEOW_NoOverlap_combined",stringsAsFactors=F) 
+  # marine <- st_wrap_dateline(marine, options = c("WRAPDATELINE=YES"))
+  # marine <- st_transform(marine,crs)
+  
+  
+  ### Output ##########################################
+  
+  marine <- marine[c("ECOREGION","PROVINCE","REALM")]
+  colnames(marine) <- c("Ecoregion","Province","Realm","geometry")
+  marine$Region <- NA
+  marine <- marine[,c("Region","Ecoregion","Province","Realm","geometry")]
+  
+  terr <- regs_shp[c("Region")]
+  terr$Ecoregion <- NA
+  terr$Province <- NA
+  terr$Realm <- NA
+  terr <- terr[,c("Region","Ecoregion","Province","Realm","geometry")]
+  
+  terr_marine <- rbind(terr,marine)
+  
+  st_write(terr_marine,dsn=file.path("Data","Input","Shapefiles"),layer="RegionsTerrMarine",driver="ESRI Shapefile",delete_layer=T) ## output
+  
+  # x11(width=12)
+  # plot(st_geometry(terr_marine),col="blue")
+
+}
+
+
