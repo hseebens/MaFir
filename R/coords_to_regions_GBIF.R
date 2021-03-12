@@ -49,7 +49,7 @@ coords_to_regions_GBIF <- function(
   SpecRegionData <-  read.table(file.path("Data","Input",name_of_TaxonLoc),stringsAsFactors = F,header=T)
   
   ## standardise location names 
-  newLocNames <- standardise_location_names(SpecRegionData$Location,file_name_extension)
+  newLocNames <- standardise_location_names(SpecRegionData$Location,file_name_extension,data_set = name_of_TaxonLoc)
   if (nrow(newLocNames)!=nrow(SpecRegionData)){
     stop("\n Standardisation of location names went wrong. Check standardise_location_names.R in coords_to_regions.R \n")
   } 
@@ -59,17 +59,13 @@ coords_to_regions_GBIF <- function(
   SpecRegionData_keys <- merge(SpecRegionData,GBIF_specieskeys[,c("scientificName","speciesKey")],by="scientificName")  
   uni_spec <- unique(SpecRegionData_keys[,c("scientificName","speciesKey")])
 
-  # ## (FOR OBIS WE NEED AN ID-SPECIES FILE TO IDENTIFY ALIEN POPULATIONS)
-  # ## First record database with OBIS keys
-  # firstrecords_OBIS <- readRDS("Data/RobisCoordinates.rds")
-  
   ## Polygon file of marine and terrestrial regions
   regions <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer=name_of_shapefile,stringsAsFactors = F)
-  regions$Ecoregion[!is.na(regions$Ecoregion)] <- paste(regions$Ecoregion[!is.na(regions$Ecoregion)],"MEOW",sep="_")
+  # regions$Ecoregion[!is.na(regions$Ecoregion)] <- paste(regions$Ecoregion[!is.na(regions$Ecoregion)],"MEOW",sep="_")
   # regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
   
   ## standardise location names 
-  newLocNames <- standardise_location_names(regions$Location,data_set="Shapefile")
+  newLocNames <- standardise_location_names(regions$Location,file_name_extension,data_set="Shapefile")
   if (nrow(newLocNames)!=nrow(regions)){
     stop("\n Standardisation of location names went wrong. Check standardise_location_names.R in coords_to_regions.R \n")
   } 
@@ -137,7 +133,7 @@ coords_to_regions_GBIF <- function(
   }
   
   nchunks <- length(available_files) # set total number of data files, which contain the GBIF records
-  nsteps <- 10
+  nsteps <- 20
   
   all_counter <- 0
   chunk_out <- all_out <- list()
@@ -168,11 +164,11 @@ coords_to_regions_GBIF <- function(
       ## export
       coords_mat <- as.data.frame(st_coordinates(ptspoly_alien),stringsAsFactors = F)
       if (realm_extension){ #### ADJUST COLUMN NAMES AFTER MAKING THE SHAPEFILE CONSISTENT!!!!
-        output <- cbind.data.frame(ptspoly_alien$speciesKey,ptspoly_alien$Region,ptspoly_alien$Realm,coords_mat,stringsAsFactors=F) #
-        colnames(output) <- c("speciesKey","Region","Realm","Longitude","Latitude")#
+        output <- cbind.data.frame(ptspoly_alien$speciesKey,ptspoly_alien$Location,ptspoly_alien$Realm,coords_mat,stringsAsFactors=F) #
+        colnames(output) <- c("speciesKey","Location","Realm","Longitude","Latitude")#
       } else { #### ADJUST COLUMN NAMES AFTER MAKING THE SHAPEFILE CONSISTENT!!!!
-        output <- cbind.data.frame(ptspoly_alien$speciesKey,ptspoly_alien$Region,coords_mat,stringsAsFactors=F) #
-        colnames(output) <- c("speciesKey","Region","Longitude","Latitude")#
+        output <- cbind.data.frame(ptspoly_alien$speciesKey,ptspoly_alien$Location,coords_mat,stringsAsFactors=F) #
+        colnames(output) <- c("speciesKey","Location","Longitude","Latitude")#
       }
       output <- unique(output)
       
@@ -184,11 +180,11 @@ coords_to_regions_GBIF <- function(
       
       ## remove entries with a very low number of records per region (requires coordinates in the file 'outpout')
       #### ADJUST COLUMN NAMES AFTER MAKING THE SHAPEFILE CONSISTENT!!!!
-      region_records <- as.data.frame(table(output$speciesKey,output$Region),stringsAsFactors = F)
+      region_records <- as.data.frame(table(output$speciesKey,output$Location),stringsAsFactors = F)
       region_records <- subset(region_records,Freq>0 & Freq<3)
       remove_taxreg <- paste0(region_records$Var1,"_",region_records$Var2)
-      output <- subset(output,!(paste0(output$speciesKey,"_",output$Region)%in%remove_taxreg))
-      output <- unique(output[,c("speciesKey","Region","Realm")])
+      output <- subset(output,!(paste0(output$speciesKey,"_",output$Location)%in%remove_taxreg))
+      output <- unique(output[,c("speciesKey","Location","Realm")])
       
       ## identify species with the majority of records in terrestrial realm and remove
       if (realm_extension){ #### ADJUST COLUMN NAMES AFTER MAKING THE SHAPEFILE CONSISTENT!!!!
@@ -199,13 +195,13 @@ coords_to_regions_GBIF <- function(
         non_marinespec <- rownames(realm_spec_proc)[realm_spec_proc[,which(colnames(realm_spec_proc)=="marine")] <= 75]
         output <- subset(output,!(speciesKey%in%non_marinespec & Realm=="marine")) # remove marine records of non-marine species
       }
-      
+      if (output$Location=="Hawaiian Islands" & output$Realm=="marine") {print(paste(i,j)); stop()}
       # ## test 
-      # test_dat <- unique(merge(unique(output[,c("speciesKey","Region","Realm")]),firstrecords_GBIF[,c("speciesKey","Species","Class","Order")],by="speciesKey"))
+      # test_dat <- unique(merge(unique(output[,c("speciesKey","Location","Realm")]),firstrecords_GBIF[,c("speciesKey","Species","Class","Order")],by="speciesKey"))
       # graphics.off()
       # x11(width=12,height=12)
       # plot(st_geometry(regions),xlim=c(0,10),ylim=c(50,60))
-      # points(output[which(output$speciesKey==3189846 & output$Region=="North Sea"),c("Longitude","Latitude")],col="black",pch=16)
+      # points(output[which(output$speciesKey==3189846 & output$Location=="North Sea"),c("Longitude","Latitude")],col="black",pch=16)
       # 
       # subset(firstrecords_GBIF,speciesKey==9809222) #>75, no vascular plants, no birds, no insects
       # tab_realm[which(rownames(tab_realm)=="5277297"),]
@@ -235,174 +231,12 @@ coords_to_regions_GBIF <- function(
   # all_records_spec <- readRDS(file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".rds")))
   
   ## remove intermediate files if previous saving was successful
-  if (file.exists(file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIF_",file_name_extension,".rds")))){
+  if (file.exists(file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".rds")))){
     for (i in 1:nchunks){ # loop over all chunks of coordinate data
       for (j in 1:(length(steps)-1)){# 
-        file.remove(file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIF_",file_name_extension,"_",i,"_",j,".rds")))
+        file.remove(file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIF_",file_name_extension,"_",i,".rds")))
       }
     }
   }
   # return(all_records_spec)
 }
-
-# all_records_spec <-  readRDS(file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,".rds")))
-# 
-# x <- 0
-# all_out <- list()
-# for (i in 1:21){
-#   # x <- x + 1
-#   # regs_species <- readRDS(paste0("/home/hanno/Bioinvasion/Others/EkinInternship/GBIF_First_Records_",i,".rds"))
-#   # all_out[[x]] <- regs_species
-#   for (j in 1:9){
-#     x <- x + 1
-#     print(x)
-#     regs_species <- readRDS(paste0("FirstRecords_Coords_min5",i,"_",j,".rds"))
-#     regs_species <- regs_species[,c("speciesKey","Region","Realm")]
-#     regs_species <- regs_species[!duplicated(regs_species),]
-# 
-#     all_out[[x]] <- regs_species
-#   }
-# }
-# regs_species <- unique(do.call("rbind",all_out))
-# # saveRDS(regs_species,"FirstRecords_Coords_min5.rds")
-# all_records_spec <- readRDS("/home/hanno/Bioinvasion/Others/EkinInternship/FirstRecords_Coords_min5.rds")
-# 
-# 
-# ## add first records to marine species-regions combination #######################
-# colnames(all_records_spec)[colnames(all_records_spec)=="Region"] <- "MEOW"
-# if (any(grepl("FirstRecord",colnames(all_records_spec)))) all_records_spec <- all_records_spec[,-grep("FirstRecord",colnames(regs_species))]
-# marine_regs_species <- merge(all_records_spec,meow_records[,-which(colnames(meow_records)=="scientificName")],by=c("speciesKey","MEOW"))
-# marine_regs_species <- subset(marine_regs_species,Realm=="marine")
-# marine_regspec_fr <- aggregate(FirstRecord ~ MEOW + Species + speciesKey + Realm + Source,data=marine_regs_species,FUN=min)
-# 
-# 
-# ## add first records to terrestrial species-regions combination #######################
-# colnames(all_records_spec)[colnames(all_records_spec)=="MEOW"] <- "Region"
-# terr_regs_species <- merge(all_records_spec,SpecRegionData[,-which(colnames(SpecRegionData)=="Species")],by=c("speciesKey","Region"))
-# terr_regs_species <- subset(terr_regs_species,Realm!="marine")
-# terr_regspec_fr <- aggregate(FirstRecord ~ Region + Species + speciesKey + Realm + Source,data=terr_regs_species,FUN=min)
-# 
-# ## combine terrestrial and marine first records #################################
-# colnames(marine_regspec_fr)[colnames(marine_regspec_fr)=="MEOW"] <- "Region"
-# all_regspec_fr <- rbind(marine_regspec_fr,terr_regspec_fr)
-# 
-# ## set realm of freshwater species to freshwater ######################
-# all_regspec_fr$Realm[all_regspec_fr$speciesKey%in%freshwater] <- "freshwater"
-# 
-# 
-# ## output ###################################################
-# # write.table(all_regspec_fr,"FirstRecords_TerrMarRegions.csv",sep=";",row.names=F)
-# write.table(all_regspec_fr,"Data/FirstRecords_TerrMarRegions_min3.csv",sep=";",row.names=F)
-
-
-# marine_spec <- subset(all_regspec_fr,Region=="North Sea")
-# subset(all_regspec_fr,Realm=="freshwater")
-# tab_realms <- table(regs_species$Region,regs_species$Realm)
-# 
-# tab_realms[order(tab_realms[,1]),]
-# 
-# subset(firstrecords_GBIF,Species=="Sphaerocarpos michelii")
-
-# 
-# #Import Alien Records
-# fnames <- list.files(pattern = "GBIF_First_Records*")
-# xy <- lapply(fnames, readRDS)
-# x <- do.call(rbind, xy)
-# 
-# #Add First Records to Alien Coordinate Records and Save
-# lastfile <- merge(x, frmerge, by = c("Taxon", "Region"), all.y = FALSE)
-# 
-# 
-# #Remove coordinates
-# lastfile1 <- as.data.frame(cbind(lastfile$Taxon, lastfile$Region, lastfile$FirstRecord))
-# lastfile1 <- lastfile1 %>% distinct()
-# 
-# saveRDS(lastfile1,file = "GBIF_Alien_OCC_FR_1_1.rds")
-# 
-# #If you want to run a benchmark on how much time is needed to run this code
-# time2 <- Sys.time()
-# time2 - time1
-# 
-# #100.000 1.5 minutes, 1.000.000 10 minutes
-# 
-# 
-# 
-# 
-# 
-# #OBIS
-# 
-# #Clean environment to clear space for OBIS code
-# graphics.off()
-# rm(list=ls())
-# 
-# #Set working directory
-# setwd("C:/Users/ekink/Desktop/Internship/First Records Project/FirstRecords/Data")
-# 
-# #Import OBIS occurrence Data
-# rdsfile1 <- readRDS("RobisCoordinates")
-# 
-# #Import Intermediary Files
-# setwd("C:/Users/ekink/Desktop/Internship/gbif_downloads/1/one_one")
-# sfr_gbif <- read.csv("C:/Users/ekink/Desktop/Internship/gbif_downloads/1/one_one/SpeciesFirstRecords_GBIFkeys.csv", sep=";")
-# 
-# 
-# 
-# #Form a Column for Taxons and Regions
-# sfr_gbif$TaxonRegion <- paste(sfr_gbif$Species,sfr_gbif$Country,sep="_")
-# 
-# #Import polygon file
-# regions<- st_read(dsn="C:/Users/ekink/Desktop/Internship/Software/GIS/terraqua",layer="terraqua",stringsAsFactors = F)
-# 
-# #Merge Polygon file with Coordinates
-# coords <- st_as_sf(rdsfile1,coords=c("decimalLongitude","decimalLatitude"),
-#                    crs=st_crs(regions))
-# 
-# 
-# 
-# #Arrange the steps of for loop
-# steps <- ceiling(seq(1,nrow(coords),length.out=10))
-# 
-# 
-# counter <- 0
-# 
-# #Identify and Save alien records
-# for (j in 1:(length(steps)-1)){
-#         counter <- counter + 1
-#         
-#         ## identify region of occurrence
-#         ptspoly <- st_join(coords[steps[j]:steps[j+1],],regions)
-#         
-#         ## identify and keep only alien records
-#         ptspoly$SpeciesRegion <- paste(ptspoly$scientificName,ptspoly$Region,sep="_")
-#         ptspoly_alien <- ptspoly[ptspoly$SpeciesRegion%in%sfr_gbif$TaxonRegion,]
-#         
-#         ## export
-#         coords_mat <- as.data.frame(st_coordinates(ptspoly_alien),stringsAsFactors = F)
-#         output <- cbind(ptspoly_alien$scientificName,ptspoly_alien$Region,coords_mat,stringsAsFactors=F)
-#         colnames(output) <- c("Taxon","Region","Longitude","Latitude")
-#         
-#         saveRDS(output,paste0("OBIS_Records_1_",counter,".rds"))}
-# 
-# #Import Alien Records
-# fnames <- list.files(pattern = "OBIS_Records_1_*")
-# xy <- lapply(fnames, readRDS)
-# x <- do.call(rbind, xy)
-# 
-# sfr_gbif <- sfr_gbif %>% rename(Taxon = Species, Region = Country)
-# sfr_gbif2 <- select(sfr_gbif, Taxon, Region, FirstRecord)
-# 
-# 
-# #Add First Records to Alien Coordinate Records and Save
-# lastfile <- merge(x, sfr_gbif2, by = c("Taxon", "Region"), all.y = FALSE)
-# 
-# #Remove coordinates
-# 
-# lastfile1 <- as.data.frame(cbind(lastfile$Taxon, lastfile$Region, lastfile$FirstRecord))
-# #lastfile1 <- lastfile[!is.na(lastfile$Longitude),]
-# #lastfile1 <- lastfile[!is.na(lastfile$Latitude),]
-# lastfile1 <- lastfile1 %>% distinct()
-# 
-# #Save the last file
-# saveRDS(lastfile1,file = "OBIS_Alien_OCC_FR_1_1.rds")
-# 
-# #END

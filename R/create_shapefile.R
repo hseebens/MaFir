@@ -7,10 +7,14 @@ create_shapefile <- function(terrestrial_polygons,marine_polygons){
   regs_shp <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer=terrestrial_polygons,stringsAsFactors = F)
   # regs_shp <- st_read(dsn="InvAccu/MarineExpansion/MaFir_Workflow/Data/Input/Shapefiles/",layer="SInAS_Locations",stringsAsFactors = F)
   crs_orig <- st_crs(regs_shp)
+  
+  regs_shp$Realm <- "terrestrial"
 
   ## marine ###########
   # meow_shp <- readOGR(dsn="../DATA/Regions/MEOW",layer="meow_ecos",stringsAsFactors = F)
   meow_shp <- st_read(dsn=file.path("Data","Input","Shapefiles"),layer=marine_polygons,stringsAsFactors = F)
+  
+  meow_shp$Realm <- "marine"
   
   ## freshwater (not implemented yet) ###########
   # lake <- st_read(dsn=file.path("Data","Input","Shapefiles"), layer = "ne_10m_lakes", stringsAsFactors = F)
@@ -56,25 +60,27 @@ create_shapefile <- function(terrestrial_polygons,marine_polygons){
   
   ### Output ##########################################
   
-  marine <- marine[c("ECOREGION","PROVINCE","REALM")]
-  colnames(marine) <- c("Ecoregion","Province","Realm_MEOW","geometry")
+  marine <- marine[c("ECOREGION","PROVINCE","REALM","Realm")]
+  colnames(marine) <- c("Ecoregion","Province","Realm_MEOW","Realm","geometry")
   marine$Region <- NA
-  marine <- marine[,c("Region","Ecoregion","Province","Realm_MEOW","geometry")]
+  marine$Ecoregion <- paste0(marine$Ecoregion,"_MEOW")
+  marine <- marine[,c("Region","Ecoregion","Province","Realm_MEOW","Realm","geometry")]
   
-  terr <- regs_shp[c("Region")]
+  terr <- regs_shp[c("Region","Realm")]
   terr$Ecoregion <- NA
   terr$Province <- NA
   terr$Realm_MEOW <- NA
-  terr <- terr[,c("Region","Ecoregion","Province","Realm_MEOW","geometry")]
+  terr <- terr[,c("Region","Ecoregion","Province","Realm_MEOW","Realm","geometry")]
   
   terr_marine <- rbind(terr,marine)
   terr_marine <- st_transform(terr_marine,crs=crs_orig)
   
+  terr_marine$Location <- NA
   terr_marine$Location[!is.na(terr_marine$Region)] <- terr_marine$Region[!is.na(terr_marine$Region)]
   terr_marine$Location[!is.na(terr_marine$Ecoregion)] <- terr_marine$Ecoregion[!is.na(terr_marine$Ecoregion)]
-  terr_marine$Realm <- NA
-  terr_marine$Realm[!is.na(terr_marine$Region)] <- "terrestrial"
-  terr_marine$Realm[!is.na(terr_marine$Ecoregion)] <- "marine"
+  # terr_marine$Realm <- NA
+  # terr_marine$Realm[!is.na(terr_marine$Region)] <- "terrestrial"
+  # terr_marine$Realm[!is.na(terr_marine$Ecoregion)] <- "marine"
   terr_marine <- terr_marine[,c("Location","Region","Ecoregion","Province","Realm_MEOW","Realm","geometry")]
   
   st_write(terr_marine,dsn=file.path("Data","Input","Shapefiles"),layer="RegionsTerrMarine",driver="ESRI Shapefile",delete_layer=T) ## output

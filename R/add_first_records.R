@@ -26,7 +26,7 @@ add_first_records <- function(
   SpecRegionData_keys <- merge(SpecRegionData,GBIF_keys,by="scientificName",all.x=T)
 
   ## add first records to marine species-regions combination #######################
-  colnames(all_records_spec)[colnames(all_records_spec)=="Region"] <- "MEOW"
+  colnames(all_records_spec)[colnames(all_records_spec)=="Location"] <- "MEOW"
   if (any(grepl("FirstRecord",colnames(all_records_spec)))) all_records_spec <- all_records_spec[,-grep("FirstRecord",colnames(regs_species))]
   marine_regs_species <- merge(all_records_spec,meow_records[,-which(colnames(meow_records)=="scientificName")],by=c("speciesKey","MEOW"),all.x=T)
   marine_regs_species <- subset(marine_regs_species,Realm=="marine")

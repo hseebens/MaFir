@@ -8,6 +8,7 @@ library(shape)
 setwd("/home/hanno/Bioinvasion/InvAccu/MarineExpansion/MaFir_Workflow/")
 
 source("../../../SpatialSpread/owncolleg.r") # adjusted color legend
+source(file.path("R","standardise_location_names.R")) # standardise location names (for matching with shapefile)
 
 
 ### load data ###############################################################
@@ -21,6 +22,14 @@ regions <- st_read(dsn="Data/Input/Shapefiles",layer="RegionsTerrMarine",strings
 # marine_regions <- st_read(dsn="Data/Input/Shapefiles",layer="MEOW_NoOverlap_combined",stringsAsFactors = F)
 # marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)] <- paste(marine_regions$ECOREGION[!is.na(marine_regions$ECOREGION)],"MEOW",sep="_")
 
+## standardise location names 
+file_name_extension <- "SInAS_2"
+newLocNames <- standardise_location_names(regions$Location,file_name_extension,data_set="Shapefile")
+if (nrow(newLocNames)!=nrow(regions)){
+  stop("\n Standardisation of location names went wrong. Check standardise_location_names.R in coords_to_regions.R \n")
+} 
+regions$Location <- newLocNames$Location
+
 ## change projection to Robinson
 crs <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m" # Robinson projection
 regions <- st_wrap_dateline(regions, options = c("WRAPDATELINE=YES"))
@@ -32,7 +41,7 @@ regions <- st_transform(regions,crs)
 # regions$Realm[!is.na(regions$ECOREGION)] <- "marine"
 # regions$Realm[!is.na(regions$Region)] <- "terrestrial"
 
-regions$Location[!is.na(regions$Ecoregion)] <- paste(regions$Ecoregion[!is.na(regions$Ecoregion)],"MEOW",sep="_")
+# regions$Location[!is.na(regions$Ecoregion)] <- paste(regions$Ecoregion[!is.na(regions$Ecoregion)],"MEOW",sep="_")
 # regions$Region[!is.na(regions$Ecoregion)] <- regions$Ecoregion[!is.na(regions$Ecoregion)]
 # regions$Region[!is.na(regions$featurecla)] <- regions$name[!is.na(regions$featurecla)]
 # regions <- regions[is.na(regions$featurecla),] # remove lakes !!!! (no alien distinction available yet)
@@ -85,7 +94,7 @@ library(RColorBrewer)
 nspec_reg <- aggregate(scientificName ~ Location + Realm,data=all_regspec_fr,FUN=length)
 colnames(nspec_reg)[dim(nspec_reg)[2]] <- "nSpec"
 # colnames(nspec_reg)[1] <- "Region"
-# nspec_reg$nSpec[nspec_reg$nSpec>2000] <- 2000
+nspec_reg$nSpec[nspec_reg$nSpec>5000] <- 5000
 
 
 spatial_nspec <- merge(regions,nspec_reg,by=c("Location","Realm"),all.x=T)
@@ -145,7 +154,9 @@ par(op)
 
 nspec_reg_mar <- subset(nspec_reg,Realm=="marine")
 
-spatial_nspec <- merge(marine_regions,nspec_reg_mar,by.x="ECOREGION",by.y="Region",all.x=T)
+marine_regions <- regions[regions$Realm=="marine",]
+
+spatial_nspec <- merge(marine_regions,nspec_reg_mar,by.x="Ecoregion",by.y="Region",all.x=T)
 # spatial_nspec$nSpec[is.na(spatial_nspec$nSpec)] <- 0
 # spatial_nspec <- spatial_nspec[!is.na(spatial_nspec$x),]
 

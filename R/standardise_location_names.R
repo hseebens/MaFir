@@ -1,6 +1,6 @@
 
 
-standardise_location_names <- function(dat,file_name_extension,data_set){
+standardise_location_names <- function(dat,file_name_extension,data_set=NULL){
 
   # dat <- SpecRegionData$Location
   
