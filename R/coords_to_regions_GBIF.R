@@ -136,7 +136,7 @@ coords_to_regions_GBIF <- function(
   nsteps <- 20
   
   all_counter <- 0
-  chunk_out <- all_out <- list()
+  chunk_out <- chunk_out_coords <- all_out <- all_out_coords <- list()
   for (i in 1:nchunks){ # loop over all chunks of GBIF coordinate data
     
     # Import processed GBIF files
@@ -184,7 +184,6 @@ coords_to_regions_GBIF <- function(
       region_records <- subset(region_records,Freq>0 & Freq<3)
       remove_taxreg <- paste0(region_records$Var1,"_",region_records$Var2)
       output <- subset(output,!(paste0(output$speciesKey,"_",output$Location)%in%remove_taxreg))
-      output <- unique(output[,c("speciesKey","Location","Realm")])
       
       ## identify species with the majority of records in terrestrial realm and remove
       if (realm_extension){ #### ADJUST COLUMN NAMES AFTER MAKING THE SHAPEFILE CONSISTENT!!!!
@@ -195,7 +194,18 @@ coords_to_regions_GBIF <- function(
         non_marinespec <- rownames(realm_spec_proc)[realm_spec_proc[,which(colnames(realm_spec_proc)=="marine")] <= 75]
         output <- subset(output,!(speciesKey%in%non_marinespec & Realm=="marine")) # remove marine records of non-marine species
       }
-      if (output$Location=="Hawaiian Islands" & output$Realm=="marine") {print(paste(i,j)); stop()}
+      if (nrow(output)>0){
+        if (output$Location=="Hawaiian Islands" & output$Realm=="marine") {print(paste(i,j)); stop()}
+      }
+      
+      if (realm_extension){
+        output_noCoords <- unique(output[,c("speciesKey","Location","Realm")])
+        output_coords <- unique(output[,c("speciesKey","Location","Realm","Longitude","Latitude")])
+      } else {
+        output_noCoords <- unique(output[,c("speciesKey","Location")])
+        output_coords <- unique(output[,c("speciesKey","Location","Longitude","Latitude")])
+      }
+
       # ## test 
       # test_dat <- unique(merge(unique(output[,c("speciesKey","Location","Realm")]),firstrecords_GBIF[,c("speciesKey","Species","Class","Order")],by="speciesKey"))
       # graphics.off()
@@ -209,34 +219,65 @@ coords_to_regions_GBIF <- function(
       ## output ###############
       # saveRDS(output,file.path("Data","Output","Intermediate",paste0("AlienRegions_",file_name_extension,"_",i,"_",j,".rds")))
       
-      chunk_out[[j]] <- output
+      chunk_out_coords[[j]] <- output_coords
+      chunk_out[[j]]        <- output_noCoords
     }
     chunk_records <- unique(do.call("rbind",chunk_out))
+    chunk_records_coords <- unique(do.call("rbind",chunk_out_coords))
     
     all_out[[i]] <- chunk_records
+    all_out_coords[[i]] <- chunk_records_coords
     
     ## output ###############
-    saveRDS(chunk_records,file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIF_",file_name_extension,"_",i,".rds")))
+    fwrite(chunk_records,file=file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIF_",file_name_extension,"_",i,".csv")))
+    
+    fwrite(chunk_records_coords,file=file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIFCoords_",file_name_extension,"_",i,".gz")))
   }
-  all_records <- do.call("rbind",all_out)
+  all_records <- rbindlist(all_out)
   all_records <- unique(all_records)
   
   all_records_spec <- merge(all_records,uni_spec,by="speciesKey",all.x=T)
-
+  
   ## set realm of freshwater species to freshwater ######################
   all_records_spec$Realm[all_records_spec$speciesKey%in%freshwater] <- "freshwater"
   
   # ## output ###############
-  saveRDS(all_records_spec,file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".rds")))
+  fwrite(all_records_spec,file=file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".csv")))
   # all_records_spec <- readRDS(file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".rds")))
   
   ## remove intermediate files if previous saving was successful
-  if (file.exists(file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".rds")))){
+  if (file.exists(file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".csv")))){
     for (i in 1:nchunks){ # loop over all chunks of coordinate data
       for (j in 1:(length(steps)-1)){# 
-        file.remove(file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIF_",file_name_extension,"_",i,".rds")))
+        file.remove(file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIF_",file_name_extension,"_",i,".csv")))
       }
     }
   }
+  
+  ## with coordinates
+  
+  # all_out_coords <- list()
+  # for (i in 1:nchunks){ # loop over all chunks of coordinate data
+  #   all_out_coords[[i]] <- readRDS(file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIFCoords_",file_name_extension,"_",i,".rds")))
+  # }
+  
+  all_coords <- rbindlist(all_out_coords)
+  all_coords <- unique(all_coords)
+  
+  # all_coords_spec <- merge(all_coords,uni_spec,by="speciesKey",all.x=T)
+  all_coords$Realm[all_coords$speciesKey%in%freshwater] <- "freshwater"
+  
+    
+  fwrite(all_coords,file=file.path("Data","Output",paste0("AlienRegions_GBIFCoords_",file_name_extension,".gz")))
+  
+  ## remove intermediate files if previous saving was successful
+  if (file.exists(file.path("Data","Output",paste0("AlienRegions_GBIFCoords_",file_name_extension,".gz")))){
+    for (i in 1:nchunks){ # loop over all chunks of coordinate data
+      # for (j in 1:(length(steps)-1)){# 
+        file.remove(file.path("Data","Output","Intermediate",paste0("AlienRegions_GBIFCoords_",file_name_extension,"_",i,".gz")))
+      # }
+    }
+  }
+  
   # return(all_records_spec)
 }
