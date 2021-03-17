@@ -17,6 +17,8 @@ library(httr)
 library(dismo)
 library(sf)   # for transform_coords_to_regions
 library(worrms)
+library(robis)
+
 
 
 ### Full path to GBIF and OBIS download folders ###################################

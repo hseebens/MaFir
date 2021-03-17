@@ -266,8 +266,7 @@ coords_to_regions_GBIF <- function(
   
   # all_coords_spec <- merge(all_coords,uni_spec,by="speciesKey",all.x=T)
   all_coords$Realm[all_coords$speciesKey%in%freshwater] <- "freshwater"
-  
-    
+
   fwrite(all_coords,file=file.path("Data","Output",paste0("AlienRegions_GBIFCoords_",file_name_extension,".gz")))
   
   ## remove intermediate files if previous saving was successful
