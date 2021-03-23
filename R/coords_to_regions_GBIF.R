@@ -14,6 +14,8 @@
 coords_to_regions_GBIF <- function(
         name_of_TaxonLoc,
         name_of_shapefile,
+        name_of_taxacolumn=name_of_taxacolumn,
+        name_of_regioncolumn=name_of_regioncolumn,
         realm_extension,
         file_name_extension
   ){
@@ -21,10 +23,10 @@ coords_to_regions_GBIF <- function(
   ### load data ###############################################################
   
   ## get GBIF species keys
-  GBIF_specieskeys <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
+  GBIF_specieskeys <- fread(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
   
   ## Taxon list
-  SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
+  SpecNames <-  fread(file.path("Data","Input",name_of_specieslist))
   
   if (realm_extension  # check if realms should be identified
       & !file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
@@ -35,18 +37,21 @@ coords_to_regions_GBIF <- function(
       
       SpecNames <- get_WoRMS_habitats(SpecNames) # get habitats for species in WoRMS
       
-      write.table(SpecNames,file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
+      fwrite(SpecNames,file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
   }
 
   ## load taxon list with habitats if existing
   if (realm_extension & file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))){
-    SpecNames <- read.table(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)),stringsAsFactors = F)
+    SpecNames <- fread(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
   }
+  colnames(SpecNames)[colnames(SpecNames)==name_of_taxacolumn] <- "scientificName"
 
   SpecNames <- merge(SpecNames,GBIF_specieskeys[,c("scientificName","speciesKey")],by="scientificName")  
   
   ## Taxon x region database 
-  SpecRegionData <-  read.table(file.path("Data","Input",name_of_TaxonLoc),stringsAsFactors = F,header=T)
+  SpecRegionData <-  fread(file.path("Data","Input",name_of_TaxonLoc))
+  colnames(SpecRegionData)[colnames(SpecRegionData)==name_of_taxacolumn] <- "scientificName"
+  colnames(SpecRegionData)[colnames(SpecRegionData)==name_of_regioncolumn] <- "Location"
   
   ## standardise location names 
   newLocNames <- standardise_location_names(SpecRegionData$Location,file_name_extension,data_set = name_of_TaxonLoc)
@@ -94,22 +99,36 @@ coords_to_regions_GBIF <- function(
     ## add marine ecoregions to taxon-region pairs 
     marine_terr_recs <- merge(neighbours,SpecRegionData_keys,by="Location")
     marine_speckeys <- unique(marine_terr_recs[,c("MEOW","speciesKey")])
-    meow_records <- unique(marine_terr_recs[,c("MEOW","scientificName","speciesKey","eventDate")])#,"Source"
-    saveRDS(meow_records,file.path("Data","Output","Intermediate","MarineRecords_GBIF.rds"))
+    if (any(colnames(marine_terr_recs)%in%c("FirstRecord","eventDate"))){
+      colnames(marine_terr_recs)[colnames(marine_terr_recs)%in%c("FirstRecord","First_Record")] <- "eventDate"
+      meow_records <- unique(marine_terr_recs[,c("MEOW","scientificName","speciesKey","eventDate")])#,"Source"
+    } else {
+      meow_records <- unique(marine_terr_recs[,c("MEOW","scientificName","speciesKey")])#,"Source"
+    }
+    fwrite(meow_records,file.path("Data","Output","Intermediate","MarineRecords_GBIF.gz"))
     
     TaxonRegionPairs <- c(TaxonRegionPairs,paste(marine_speckeys$speciesKey,marine_speckeys$MEOW,sep="_"))
   
     ## list species which are clearly non-marine, clearly marine and clearly freshwater ######
-    non_marine <- subset(SpecNames,
+    if (all(c("class","phylum")%in%tolower(colnames(SpecNames)))){
+      colnames(SpecNames)[tolower(colnames(SpecNames))=="class"] <- "class"
+      colnames(SpecNames)[tolower(colnames(SpecNames))=="phylum"] <- "phylum"
+      
+      non_marine <- subset(SpecNames,
                            class=="Insecta" 
-                         | phylum=="Tracheophyta"
-                         | phylum=="Anthocerotophyta"
-                         | phylum=="Bryophyta"
-                         | class=="Arachnida"
-                         | class=="Aves"
-                         | class=="Amphibia"
-                         | class=="Mammalia" # not fully correct, but no marine alien mammal known
-                         | Habitat_marine=="0")$speciesKey
+                           | phylum=="Tracheophyta"
+                           | phylum=="Anthocerotophyta"
+                           | phylum=="Bryophyta"
+                           | class=="Arachnida"
+                           | class=="Aves"
+                           | class=="Amphibia"
+                           | class=="Mammalia" # not fully correct, but no marine alien mammal known
+                           | Habitat_marine=="0")$speciesKey
+    } else {
+      cat("\n No information of class and phylum is provided. Skip identification of non-marine species based on taxonomic information. \n")
+      
+      non_marine <- subset(SpecNames,Habitat_marine=="0")$speciesKey
+    }
     
     marine <- subset(SpecNames,Habitat_marine=="1")$speciesKey
     
@@ -123,10 +142,13 @@ coords_to_regions_GBIF <- function(
   folder <- file.path("Output","Intermediate")
   available_files <- list.files(file.path("Data","Output","Intermediate"))
   available_files <- available_files[grep("GBIFrecords_Cleaned_",available_files)]
+  available_files <- available_files[grep(file_name_extension,available_files)]
+  
   if (length(available_files)==0){
     folder <- "Output"
     available_files <- list.files(file.path("Data","Output"))
     available_files <- available_files[grep("GBIFrecords_Cleaned_",available_files)]
+    available_files <- available_files[grep(file_name_extension,available_files)]
   }
   if (length(available_files)==0){
     cat("\n No available files with coordinates found! \n")

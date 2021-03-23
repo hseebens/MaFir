@@ -10,10 +10,10 @@
 clean_OBIS_records <- function(path_to_OBISdownloads,file_name_extension,thin_records){
   
   # load file
-  dat_sub <- readRDS(file.path(path_to_OBISdownloads,"OBISrecords_SInAS_110321.rds"))
+  dat_sub <- fread(file.path(path_to_OBISdownloads,paste0("OBIS_CompleteDownload_",file_name_extension,".gz")))
   
   # remove duplicates
-  dat_sub <- unique(dat_sub)
+  dat_sub <- unique(dat_sub[,c("scientificName","decimalLongitude","decimalLatitude","speciesid")])
   
   # remove non-numeric values
   nonnumeric <- is.na(as.numeric(dat_sub$decimalLatitude)) | is.na(as.numeric(dat_sub$decimalLongitude))
@@ -142,6 +142,7 @@ clean_OBIS_records <- function(path_to_OBISdownloads,file_name_extension,thin_re
                                      outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
   }
   
-  saveRDS(dat_cleaned_all, file.path("Data","Output",paste0("OBISrecords_Cleaned_All_",file_name_extension,".rds")))
+  fwrite(dat_cleaned_all, file.path("Data","Output",paste0("OBISrecords_Cleaned_All_",file_name_extension,".gz")))
+  # dat_cleaned_all <- fread(file.path("Data","Output",paste0("OBISrecords_Cleaned_All_",file_name_extension,".gz")))
 }
 

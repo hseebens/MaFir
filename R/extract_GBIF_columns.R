@@ -82,13 +82,13 @@ extract_GBIF_columns <- function(path_to_GBIFdownloads,file_name_extension){
     ind <- is.na(dat_sub$speciesKey) | is.na(dat_sub$decimalLatitude) | is.na(dat_sub$decimalLongitude)
     dat_sub <- dat_sub[!ind,]
 
-    cat(paste0("\n  ",length(unique(dat_sub$speciesKey))," species for ","GBIFrecords_",file_name_extension,"_",key,"-",i,".rds \n"))
+    cat(paste0("\n  ",length(unique(dat_sub$speciesKey))," species for ","GBIFrecords_",file_name_extension,"_",key,"-",i,".gz \n"))
     
     ## output ###########
-    saveRDS(dat_sub,file = file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))
+    fwrite(dat_sub,file = file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".gz")))
     
     ## remove unzipped file to save space ##############
-    if (file.exists(file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".rds")))){
+    if (file.exists(file.path("Data","Output","Intermediate",paste0("GBIFrecords_",file_name_extension,"_",key,"-",i,".gz")))){
       file.remove(file.path(path_to_GBIFdownloads,unzipped))
     }
   }

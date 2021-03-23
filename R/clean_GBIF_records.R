@@ -15,7 +15,7 @@ clean_GBIF_records <- function(
 
   ## identify files to import (i.e., all files within all sub-directories ending with .rds and with 'GBIFrecords_NUMBER_NUMBER' in name)
   allfiles <- list.files(path_to_GBIFdownloads)
-  GBIF_records_files <- allfiles[grepl("\\.rds",allfiles)]
+  GBIF_records_files <- allfiles[grepl("\\.gz",allfiles)]
 
   dat_all <- list()
   for (i in 1:length(GBIF_records_files)){ # 
@@ -23,7 +23,7 @@ clean_GBIF_records <- function(
     cat(paste0("\n ",i,": ",GBIF_records_files[i],"\n"))
     
     # load file
-    dat_sub <- readRDS(file.path(path_to_GBIFdownloads,GBIF_records_files[i]))
+    dat_sub <- fread(file.path(path_to_GBIFdownloads,GBIF_records_files[i]))
     
     # remove duplicates
     dat_sub <- unique(dat_sub)
@@ -139,25 +139,25 @@ clean_GBIF_records <- function(
         }
          
         # intermediate saving of file (just for safety, files can be removed if everything works)
-        saveRDS(dat_cleaned,file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,"_",j,".rds")))
+        fwrite(dat_cleaned,file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,"_",j,".gz")))
       }
       
       # collect data store to disk
       dat_sub_all <- list()
       for (j in 1:length(group_lvl)){
         
-        dat_cleaned <- readRDS(file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,"_",j,".rds")))
+        dat_cleaned <- fread(file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,"_",j,".gz")))
         dat_sub_all[[j]] <- dat_cleaned
       }
       dat_cleaned <- rbindlist(dat_sub_all)
 
       # intermediate saving of file (just for safety, files can be removed if everything works)
-      saveRDS(dat_cleaned,file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".rds")))
+      fwrite(dat_cleaned,file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".gz")))
       
       ## remove intermediate files if previous saving was successful
-      if (file.exists(file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".rds")))){
+      if (file.exists(file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".gz")))){
         for (j in 1:length(group_lvl)){
-          file.remove(file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,"_",j,".rds")))
+          file.remove(file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,"_",j,".gz")))
         }
       }
     } else { # for smaller data sets
@@ -172,7 +172,7 @@ clean_GBIF_records <- function(
                                        outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
       
       # intermediate saving of file (just for safety, files can be removed if everything works)
-      saveRDS(dat_cleaned,file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".rds")))
+      fwrite(dat_cleaned,file.path("Data","Output","Intermediate",paste0("GBIFrecords_Cleaned_",file_name_extension,"_",i,".gz")))
     }
     
     dat_all[[i]] <- dat_cleaned
@@ -181,6 +181,6 @@ clean_GBIF_records <- function(
   # output
   dat_all_df <- rbindlist(dat_all)
   
-  saveRDS(dat_all_df, file.path("Data","Output",paste0("GBIFrecords_Cleaned_All",file_name_extension,".rds")))
+  fwrite(dat_all_df, file.path("Data","Output",paste0("GBIFrecords_Cleaned_All",file_name_extension,".gz")))
 }
 

@@ -14,7 +14,7 @@
 
 
 
-send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email){
+send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email,colname="scientificName"){
   
   #######################################################################################
   ### Variables #########################################################################
@@ -28,12 +28,10 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   #######################################################################################
   ## load species list to be downloaded #################################################
   
-  SpecNames <-  read.table(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)$scientificName
-  
-  SpecNames <- unique(SpecNames)                                      # Get unique species names
-  
-  
-  
+  SpecNames <-  fread(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
+  colnames(SpecNames)[colnames(SpecNames)==colname] <- "scientificName"
+  SpecNames <- unique(SpecNames$scientificName)                                      # Get unique species names
+
   #######################################################################################
   ### get GBIF keys for all species #####################################################
   
@@ -53,14 +51,11 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   }
   GBIF_species <- as.data.frame(do.call("rbind",GBIF_speclist),stringsAsFactors = F)
   colnames(GBIF_species) <- c("speciesKey","scientificName","matchType","Orig_name")
-  
-  
+
   ## save intermediate output ######
-  write.csv2(GBIF_species, file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
+  write.csv2(GBIF_species, file.path(path_to_GBIFdownloads,"SpeciesGBIFkeys.csv"))
   # GBIF_species <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
-  
-  
-  
+
   
   #######################################################################################
   ### Get the number of GBIF records per species ########################################

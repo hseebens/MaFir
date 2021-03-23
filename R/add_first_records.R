@@ -1,7 +1,8 @@
 
 add_first_records <- function(
   file_name_extension,
-  name_of_TaxonLoc
+  name_of_TaxonLoc,
+  path_to_GBIFdownloads
   ){
   
   
@@ -9,18 +10,18 @@ add_first_records <- function(
   
   ## load data ###############################
 
-  meow_records <- readRDS(file.path("Data","Output","Intermediate","MarineRecords.rds"))
+  meow_records <- fread(file.path("Data","Output","Intermediate","MarineRecords.gz"))
   
-  SpecRegionData <-  read.table(file.path("Data","Input",name_of_TaxonLoc),stringsAsFactors = F,header=T)
+  SpecRegionData <-  fread(file.path("Data","Input",name_of_TaxonLoc),stringsAsFactors = F,header=T)
   
   if (!"eventDate"%in%colnames(SpecRegionData)){
     cat("\n Column 'eventDate' is missing. Cannot add first records. \n")
   }
   
   
-  all_records_spec <- readRDS(file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".rds")))
+  all_records_spec <- fread(file.path("Data","Output",paste0("AlienRegions_GBIF_",file_name_extension,".gz")))
 
-  GBIF_keys <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
+  GBIF_keys <- read.csv2(file.path(path_to_GBIFdownloads,"SpeciesGBIFkeys.csv"))
   GBIF_keys <- GBIF_keys[,c("speciesKey","scientificName")]
   
   SpecRegionData_keys <- merge(SpecRegionData,GBIF_keys,by="scientificName",all.x=T)
@@ -53,7 +54,7 @@ add_first_records <- function(
   
   ## load data ###############################
   
-  meow_records <- readRDS(file.path("Data","Output","Intermediate","MarineRecords_OBIS.rds"))
+  meow_records <- fread(file.path("Data","Output","Intermediate","MarineRecords_OBIS.gz"))
   colnames(meow_records)[colnames(meow_records)=="speciesid"] <- "speciesKey"
   
   SpecRegionData <-  read.table(file.path("Data","Input",name_of_TaxonLoc),stringsAsFactors = F,header=T)
@@ -62,10 +63,10 @@ add_first_records <- function(
     cat("\n Column 'eventDate' is missing. Cannot add first records. \n")
   }
   
-  all_records_spec <- readRDS(file.path("Data","Output",paste0("AlienRegions_OBIS_",file_name_extension,".rds")))
+  all_records_spec <- fread(file.path("Data","Output",paste0("AlienRegions_OBIS_",file_name_extension,".gz")))
   colnames(all_records_spec)[colnames(all_records_spec)=="speciesid"] <- "speciesKey"
   
-  OBIS_keys <- readRDS(file.path("Data","Output","OBISTaxa_SInAS_110321.rds"))
+  OBIS_keys <- fread(file.path(path_to_OBISdownloads,"OBIS_SpeciesKeys.csv"))
   OBIS_keys <- OBIS_keys[,c("speciesid","scientificName")] # scientificName in OBIS is differnt to GBIF!
   colnames(OBIS_keys)[colnames(OBIS_keys)=="speciesid"] <- "speciesKey"
   OBIS_keys$speciesKey <- as.numeric(OBIS_keys$speciesKey)
@@ -100,7 +101,7 @@ add_first_records <- function(
   all_regspec_fr <- all_regspec_fr[,c("Location","scientificName","Realm","eventDate")]
     
   ## output ###################################################
-  write.table(all_regspec_fr,file.path("Data","Output",paste0("AlienRegionsFirstRecords_",file_name_extension,".csv")),sep=";",row.names=F)
+  fwrite(all_regspec_fr,file.path("Data","Output",paste0("AlienRegionsFirstRecords_",file_name_extension,".csv")),sep=";",row.names=F)
   # all_regspec_fr <- read.table(file.path("Data","Output",paste0("AlienRegionsFirstRecords_",file_name_extension,".csv")),sep=";",header=T,stringsAsFactors = F)
   # all_regspec_fr <- readRDS(file.path("Data","FirstRecords_TerrMarRegions_min3.rds"))
 
