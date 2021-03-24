@@ -1,4 +1,16 @@
-# run MaFiR workflow
+##################################################################################
+# 
+# This script is part of the workflow MaFiR (MArine FIrst Records) to identify
+# marine species occurrences in the FirstRecord database.
+#
+# In this script, a (usually very long) species list is prepared to download
+# occurrence records from GBIF. Depending on the number of records per taxon
+# downloads are split into n_chunks of species to obtain downloads of similar
+# sizes. This requires n_chunks/3 accounts at GBIF.
+#
+# Ekin Kaplan, Hanno Seebens, 23.02.2021
+##################################################################################
+
 
 graphics.off()
 rm(list=ls())
@@ -15,7 +27,6 @@ library(worrms)
 library(robis)
 library(CoordinateCleaner) # for clean_GBIF_records
 library(httr)
-library(dismo)
 library(sf)   # for transform_coords_to_regions
 
 
@@ -38,7 +49,7 @@ path_to_OBISdownloads <- "/home/hanno/Storage_large/OBIS"
 ## for taxon names and 'Location' for region names and 'Taxon' (no authority) for habitat check
 # name_of_specieslist <- "SInAS_AlienSpeciesDB_2.3.1_FullTaxaList.csv"
 name_of_specieslist <- "IntroDat_22Mar2021.csv"
-name_of_taxacolumn <- "TaxonName"
+name_of_taxacolumn <- "scientificName"
 name_of_regioncolumn <- "Region"
 
 ## Name of file with the information of alien species and regions

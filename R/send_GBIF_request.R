@@ -28,7 +28,7 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   #######################################################################################
   ## load species list to be downloaded #################################################
   
-  SpecNames <-  fread(file.path("Data","Input",name_of_specieslist),stringsAsFactors = F,header=T)
+  SpecNames <-  fread(file.path("Data","Input",name_of_specieslist))
   colnames(SpecNames)[colnames(SpecNames)==colname] <- "scientificName"
   SpecNames <- unique(SpecNames$scientificName)                                      # Get unique species names
 
@@ -53,8 +53,8 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   colnames(GBIF_species) <- c("speciesKey","scientificName","matchType","Orig_name")
 
   ## save intermediate output ######
-  write.csv2(GBIF_species, file.path(path_to_GBIFdownloads,"SpeciesGBIFkeys.csv"))
-  # GBIF_species <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
+  fwrite(GBIF_species, file.path(path_to_GBIFdownloads,"SpeciesGBIFkeys.csv"))
+  # GBIF_species <- fread(file.path(path_to_GBIFdownloads,"SpeciesGBIFkeys.csv"))
 
   
   #######################################################################################
@@ -63,29 +63,20 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   
   cat("\n Get number of records per taxon from GBIF \n")
   
-  
-  spec_genus_split <- strsplit(GBIF_species$scientificName, " ")
-  
   GBIF_species$nRecords <- 0
-  for (i in 1:length(spec_genus_split)){
+  for (i in 1:length(GBIF_species$speciesKey)){
     
-    # extract number of occurrences  
-    options(warn=-1) # suppress warnings
-    nRecords <- try(gbif(spec_genus_split[[i]][1], spec_genus_split[[i]][2], 
-                         geo=TRUE, removeZeros=TRUE, 
-                         download=FALSE, start=1, end=Inf),silent=T)
-    options(warn=0) # set default
+    nRecords <- try(occ_count(GBIF_species$speciesKey[i]))
     
     if (class(nRecords)=="try-error") next
     
     GBIF_species$nRecords[i] <- nRecords
     
     if (i%%1000==0) print(i)
-    
   }
   
   ## save intermediate output #############################
-  write.csv2(GBIF_species, file.path("Data","Output","Intermediate","SpeciesGBIFnRecords.csv"))
+  fwrite(GBIF_species, file.path("Data","Output","Intermediate","SpeciesGBIFnRecords.csv"))
   # GBIF_species <- read.csv2(file.path("Data","Output","Intermediate","SpeciesGBIFnRecords.csv"))
   
   
@@ -100,7 +91,7 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   GBIF_species$group <- 1
   x <- 1
   for (i in 2:nrow(GBIF_species)){ # loop over all species
-    if (GBIF_species$cumsum[i-1] > sum(GBIF_species$nRecords)/ 21){ # if $cumsum is larger x, start a new cumulative sum
+    if (GBIF_species$cumsum[i-1] > sum(GBIF_species$nRecords)/ n_chunks){ # if $cumsum is larger x, start a new cumulative sum
       x <- x + 1 # counter for the number of groups of species belonging to one chunk
       GBIF_species$cumsum[i] <- GBIF_species$nRecords[i]
     } else { # if not, continue with the former cumulative sum
@@ -151,6 +142,7 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   }
   
   save(file_downloads,file=file.path("Data","Output","GBIF_download_requests.RData"))
+  # load(file=file.path("Data","Output","GBIF_download_requests.RData"))
   
   # ### using one GBIF account and different queries #######################################################
   # ### the rgbif functions are beta versions and may not work as expected! ################################

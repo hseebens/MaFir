@@ -16,7 +16,9 @@ get_GBIF_download <- function(path_to_GBIFdownloads){
   # the loaded file is called 'file_downloads'
   load(file=file.path("Data","Output","GBIF_download_requests.RData")) 
   
-  occ_download_get(file_downloads,overwrite=F,path=path_to_GBIFdownloads)
+  for (i in 1:length(file_downloads)){
+    occ_download_get(file_downloads[[i]],overwrite=F,path=path_to_GBIFdownloads)
+  }
   
   ## alternative if previous does not work, execute the following and copy-paste output to command line
   # for (i in 1:length(file_downloads)){

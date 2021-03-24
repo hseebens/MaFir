@@ -15,15 +15,17 @@ clean_GBIF_records <- function(
 
   ## identify files to import (i.e., all files within all sub-directories ending with .rds and with 'GBIFrecords_NUMBER_NUMBER' in name)
   allfiles <- list.files(path_to_GBIFdownloads)
-  GBIF_records_files <- allfiles[grepl("\\.gz",allfiles)]
-
+  # GBIF_records_files <- allfiles[grepl("\\.gz",allfiles)]
+  GBIF_records_files <- allfiles[grepl("\\.rds",allfiles)]
+  
   dat_all <- list()
   for (i in 1:length(GBIF_records_files)){ # 
     
     cat(paste0("\n ",i,": ",GBIF_records_files[i],"\n"))
     
     # load file
-    dat_sub <- fread(file.path(path_to_GBIFdownloads,GBIF_records_files[i]))
+    # dat_sub <- fread(file.path(path_to_GBIFdownloads,GBIF_records_files[i]))
+    dat_sub <- readRDS(file.path(path_to_GBIFdownloads,GBIF_records_files[i]))
     
     # remove duplicates
     dat_sub <- unique(dat_sub)
@@ -55,7 +57,11 @@ clean_GBIF_records <- function(
     if (nrow(dat_sub)>n_split){
       
       cat(paste0("\n Large data set! Split into smaller pieces.\n"))
-
+      
+      if (thin_records){
+        cat("\n Record thinning is enabled!  \n\n")
+      }
+        
       tab_rec <- cumsum(table(dat_sub$speciesKey))
       groups <- (ceiling(tab_rec/n_split))
       group_lvl <- unique(groups)
@@ -70,9 +76,7 @@ clean_GBIF_records <- function(
         # thin records by removing duplicated rounded coordinates
         if (thin_records){
           dat_thinned <- list()
-          
-          cat("\n Record thinning is enabled!  \n\n")
-          
+
           for (k in 1:length(unique(dat_sub_sub$speciesKey))){
             dat_spec <- subset(dat_sub_sub,speciesKey==unique(dat_sub_sub$speciesKey)[k])
             rounded_lat <- round(dat_spec$decimalLatitude,2) # round coordinates for thinning
