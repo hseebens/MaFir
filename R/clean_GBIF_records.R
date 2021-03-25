@@ -10,7 +10,8 @@
 clean_GBIF_records <- function(
   path_to_GBIFdownloads,
   file_name_extension,
-  thin_records
+  thin_records,
+  tests_for_cleaning = c("capitals","centroids", "equal","gbif","institutions","outliers","zeros")  # remove 'seas' test from default
   ){
 
   ## identify files to import (i.e., all files within all sub-directories ending with .rds and with 'GBIFrecords_NUMBER_NUMBER' in name)
@@ -103,8 +104,7 @@ clean_GBIF_records <- function(
             dat_cleaned_sub[[counter]] <- clean_coordinates(dat_lessrecords, 
                                                       lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
                                                       value ="clean",
-                                                      tests = c("capitals","centroids", "equal", "gbif", "institutions","outliers",  # remove 'seas' test from default
-                                                                "zeros"),
+                                                      tests = tests_for_cleaning,
                                                       outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'          
           }
           
@@ -125,8 +125,7 @@ clean_GBIF_records <- function(
               dat_cleaned_sub[[counter]] <- clean_coordinates(dat_manyrecords[pieces[m-1]:pieces[m],], 
                                                         lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
                                                         value ="clean",
-                                                        tests = c("capitals","centroids", "equal", "gbif", "institutions","outliers",  # remove 'seas' test from default
-                                                                  "zeros"),
+                                                        tests = tests_for_cleaning,
                                                         outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
             }
           }
@@ -136,8 +135,7 @@ clean_GBIF_records <- function(
           dat_cleaned <- clean_coordinates(dat_sub_sub, 
                                            lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
                                            value ="clean",
-                                           tests = c("capitals","centroids", "equal", "gbif", "institutions", "outliers",  # remove 'seas' test from default
-                                                     "zeros"),
+                                           tests = tests_for_cleaning,
                                            outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
           
         }
@@ -170,9 +168,7 @@ clean_GBIF_records <- function(
       dat_cleaned <- clean_coordinates(dat_sub, 
                                        lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesKey", 
                                        value ="clean",
-                                       tests = c("capitals","centroids", "equal", "gbif", "institutions", "outliers",  # remove 'seas' test from default
-                                                 "zeros"),
-                                       # tests = c( "outliers"),
+                                       tests = tests_for_cleaning,
                                        outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
       
       # intermediate saving of file (just for safety, files can be removed if everything works)

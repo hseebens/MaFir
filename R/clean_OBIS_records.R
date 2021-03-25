@@ -7,7 +7,12 @@
 
 
 
-clean_OBIS_records <- function(path_to_OBISdownloads,file_name_extension,thin_records){
+clean_OBIS_records <- function(
+  path_to_OBISdownloads,
+  file_name_extension,
+  thin_records,
+  tests_for_cleaning = c("capitals","centroids", "equal","gbif","institutions","outliers","zeros")  # remove 'seas' test from default
+  ){
   
   # load file
   dat_sub <- fread(file.path(path_to_OBISdownloads,paste0("OBIS_CompleteDownload_",file_name_extension,".gz")))
@@ -88,8 +93,7 @@ clean_OBIS_records <- function(path_to_OBISdownloads,file_name_extension,thin_re
           dat_cleaned_sub[[counter]] <- clean_coordinates(dat_lessrecords, 
                                                           lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesid", 
                                                           value ="clean",
-                                                          tests = c("capitals","centroids", "equal", "gbif", "institutions","outliers",  # remove 'seas' test from default
-                                                                    "zeros"),
+                                                          tests = tests_for_cleaning,
                                                           outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'          
         }
         
@@ -110,8 +114,7 @@ clean_OBIS_records <- function(path_to_OBISdownloads,file_name_extension,thin_re
             dat_cleaned_sub[[counter]] <- clean_coordinates(dat_manyrecords[pieces[m-1]:pieces[m],], 
                                                             lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesid", 
                                                             value ="clean",
-                                                            tests = c("capitals","centroids", "equal", "gbif", "institutions","outliers",  # remove 'seas' test from default
-                                                                      "zeros"),
+                                                            tests = tests_for_cleaning,
                                                             outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
           }
         }
@@ -122,8 +125,7 @@ clean_OBIS_records <- function(path_to_OBISdownloads,file_name_extension,thin_re
         dat_cleaned <- clean_coordinates(dat_sub_sub, 
                                          lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesid", 
                                          value ="clean",
-                                         tests = c("capitals","centroids", "equal", "gbif", "institutions", "outliers",  # remove 'seas' test from default
-                                                   "zeros"),
+                                         tests = tests_for_cleaning,
                                          outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
       }
       dat_sub_all[[j]] <- dat_cleaned
@@ -136,9 +138,7 @@ clean_OBIS_records <- function(path_to_OBISdownloads,file_name_extension,thin_re
     dat_cleaned_all <- clean_coordinates(dat_sub, 
                                      lon = "decimalLongitude", lat = "decimalLatitude", species = "speciesid", 
                                      value ="clean",
-                                     tests = c("capitals","centroids", "equal", "gbif", "institutions", "outliers",  # remove 'seas' test from default
-                                               "zeros"),
-                                     # tests = c( "outliers"),
+                                     tests = tests_for_cleaning,
                                      outliers_method = "mad") # this outlier methods is more robust compared to the default 'quantile'
   }
   
