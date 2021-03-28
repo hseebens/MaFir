@@ -1,9 +1,14 @@
-## Extract GBIF data from downloads ########################################
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
 #
+# The DASCO workflow has been published as ..., which has to be cited when used.
 #
+# The script open downloaded GBIF files and extracts required information.
 #
-#
-############################################################################
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
 
 
 

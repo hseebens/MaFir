@@ -1,3 +1,16 @@
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
+#
+# The DASCO workflow has been published as ..., which has to be cited when used.
+#
+# This script adds event dates (i.e., years of first record) to the final data set.
+#
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
+
+
 
 add_first_records <- function(
   file_name_extension,

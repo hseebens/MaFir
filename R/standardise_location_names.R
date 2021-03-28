@@ -1,3 +1,15 @@
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
+#
+# The DASCO workflow has been published as ..., which has to be cited when used.
+#
+# Location names are standardised accoring to the information provided in 
+# AllLocations_MaFiR.csv, which has to be provided in Data/Input.
+#
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
 
 
 standardise_location_names <- function(dat,file_name_extension,data_set=NULL){

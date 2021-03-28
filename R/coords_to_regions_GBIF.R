@@ -1,13 +1,14 @@
 ##################################################################################
 # 
-# This script is part of the workflow MaFiR (MArine FIrst Records) to identify
-# marine species occurrences in the FirstRecord database.
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
 #
-# Point-wise occurrences of species in the FirstRecord database obtained from 
-# GBIF and OBIS are matched with terrestrial and marine regions to obtain species
-# occurrences per region. 
-# 
-# Ekin Kaplan, Hanno Seebens, 07.02.2021
+# The DASCO workflow has been published as ..., which has to be cited when used.
+#
+# Point-wise occurrences of species's populations obtained from GBIF are matched 
+# with terrestrial and marine regions to obtain species occurrences per region. 
+#
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
 ##################################################################################
 
 

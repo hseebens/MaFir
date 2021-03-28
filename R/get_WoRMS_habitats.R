@@ -1,3 +1,17 @@
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
+#
+# The DASCO workflow has been published as ..., which has to be cited when used.
+#
+# The script obtains information about the habitat (freshwater, terrestrial,
+# marine) of a species from WoRMS. The mostly comprised marine species.
+#
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
+
+
 
 get_WoRMS_habitats <- function(dat){
   

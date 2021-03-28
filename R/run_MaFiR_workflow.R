@@ -1,24 +1,21 @@
 ##################################################################################
 # 
-# This script is part of the workflow MaFiR (MArine FIrst Records) to identify
-# marine species occurrences in the FirstRecord database.
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
 #
-# In this script, a (usually very long) species list is prepared to download
-# occurrence records from GBIF. Depending on the number of records per taxon
-# downloads are split into n_chunks of species to obtain downloads of similar
-# sizes. This requires n_chunks/3 accounts at GBIF.
+# The DASCO workflow has been published as ..., which has to be cited when used.
 #
-# Ekin Kaplan, Hanno Seebens, 23.02.2021
+# This script constitutes the main file, which can be used to execute the whole 
+# workflow in sequence. The user has to provide basic information about the 
+# checklist to be used, the paths for storing data and different options for 
+# the application of the workflow.
+#
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
 ##################################################################################
 
 
 graphics.off()
 rm(list=ls())
-
-
-
-
-## Note: keep Source in workflow
 
 
 library(data.table) # for clean_GBIF_records, request_GBIF_download

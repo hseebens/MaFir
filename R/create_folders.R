@@ -1,3 +1,14 @@
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
+#
+# The DASCO workflow has been published as ..., which has to be cited when used.
+#
+# The scripts checks the existence of data folders and generates them if required.
+#
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
 
 
 create_folders <- function (){

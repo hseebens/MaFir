@@ -1,9 +1,16 @@
-## Clean GBIF records ###########################################
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
 #
+# The DASCO workflow has been published as ..., which has to be cited when used.
 #
+# This cleans coordinates obtained from GBIF using the functionality of the 
+# package CoordinateCleaner. The 'outlier' test is memory and time consuming, and
+# might be switched off.
 #
-#
-#################################################################
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
 
 
 

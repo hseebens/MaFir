@@ -1,4 +1,17 @@
-## Load and merge terrestrial and marine shapefiles
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
+#
+# The DASCO workflow has been published as ..., which has to be cited when used.
+#
+# Shapefiles providing terrestrial and marine polygons are merged to create one
+# shapefile including both.
+#
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
+
+
 
 create_shapefile <- function(terrestrial_polygons,marine_polygons){
   

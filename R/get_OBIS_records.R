@@ -1,12 +1,14 @@
-#######################################################################
+##################################################################################
+# 
+# This script is part of the workflow DASCO to Downscale Alien Species Checklists
+# using Occurrence records from GBIF and OBIS.
 #
+# The DASCO workflow has been published as ..., which has to be cited when used.
 #
+# Species occurrence records are downloaded from OBIS.
 #
-#
-#
-#
-# Ekin Kaplan & Hanno Seebens
-#######################################################################
+# Authors: Hanno Seebens, Ekin Kaplan, 28.03.2021
+##################################################################################
 
 
 
