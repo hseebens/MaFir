@@ -12,24 +12,22 @@
 
 
 coords_to_regions_GBIF <- function(
-        name_of_TaxonLoc,
-        name_of_shapefile,
-        name_of_taxacolumn=name_of_taxacolumn,
-        name_of_regioncolumn=name_of_regioncolumn,
-        realm_extension,
-        file_name_extension
+  name_of_shapefile,
+  path_to_GBIFdownloads=path_to_GBIFdownloads,
+  realm_extension=T,
+  file_name_extension=file_name_extension
   ){
   
   ### load data ###############################################################
   
   ## get GBIF species keys
-  GBIF_specieskeys <- fread(file.path("Data","Output","Intermediate","SpeciesGBIFkeys.csv"))
+  GBIF_specieskeys <- fread(file.path(path_to_GBIFdownloads,paste0("GBIF_SpeciesKeys_",file_name_extension,".csv")))
   
   ## Taxon list
-  SpecNames <-  fread(file.path("Data","Input",name_of_specieslist))
+  SpecNames <-  fread(file.path("Data","Input",paste0("TaxaList_Standardised_",file_name_extension,".csv")))
   
   if (realm_extension  # check if realms should be identified
-      & !file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
+      & !file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",file_name_extension)))
       & !all(c("Habitat_marine","Habitat_freshwater","Habitat_terrestrial")%in%colnames(SpecNames))){ # check if required columns exist, if not, download data from WoRMS
 
       cat("\n 'realm_extension==TRUE' requires information about habitats from WoRMS.")
@@ -37,29 +35,18 @@ coords_to_regions_GBIF <- function(
       
       SpecNames <- get_WoRMS_habitats(SpecNames) # get habitats for species in WoRMS
       
-      fwrite(SpecNames,file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
+      fwrite(SpecNames,file.path("Data","Output","Intermediate",paste0("Habitats_",file_name_extension)))
   }
 
   ## load taxon list with habitats if existing
-  if (realm_extension & file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))){
+  if (realm_extension & file.exists(file.path("Data","Output","Intermediate",paste0("Habitats_",file_name_extension)))){
     SpecNames <- fread(file.path("Data","Output","Intermediate",paste0("Habitats_",name_of_specieslist)))
   }
-  colnames(SpecNames)[colnames(SpecNames)==name_of_taxacolumn] <- "scientificName"
 
   SpecNames <- merge(SpecNames,GBIF_specieskeys[,c("scientificName","speciesKey")],by="scientificName")  
   
   ## Taxon x region database 
-  SpecRegionData <-  fread(file.path("Data","Input",name_of_TaxonLoc))
-  colnames(SpecRegionData)[colnames(SpecRegionData)==name_of_taxacolumn] <- "scientificName"
-  colnames(SpecRegionData)[colnames(SpecRegionData)==name_of_regioncolumn] <- "Location"
-  
-  ## standardise location names 
-  newLocNames <- standardise_location_names(SpecRegionData$Location,file_name_extension,data_set = name_of_TaxonLoc)
-  if (nrow(newLocNames)!=nrow(SpecRegionData)){
-    stop("\n Standardisation of location names went wrong. Check standardise_location_names.R in coords_to_regions.R \n")
-  } 
-  SpecRegionData$Location <- newLocNames$Location
-  # ind <- which(SpecRegionData$Location!=newLocNames$Location)
+  SpecRegionData <-  fread(file.path("Data","Input",paste0("FullDataSet_Standardised_",file_name_extension,".gz")))
 
   SpecRegionData_keys <- merge(SpecRegionData,GBIF_specieskeys[,c("scientificName","speciesKey")],by="scientificName")  
   uni_spec <- unique(SpecRegionData_keys[,c("scientificName","speciesKey")])
@@ -77,12 +64,12 @@ coords_to_regions_GBIF <- function(
   regions$Location <- newLocNames$Location
   
   if (realm_extension){
-    regions$Realm <- NA
-    regions$Realm[!is.na(regions$Ecoregion)] <- "marine"
-    regions$Realm[!is.na(regions$Region)] <- "terrestrial"
+    # regions$Realm <- NA
+    # regions$Realm[!is.na(regions$Ecoregion)] <- "marine"
+    # regions$Realm[!is.na(regions$Region)] <- "terrestrial"
 
     ## Terrestrial to marine ecoregion file
-    neighbours <- read.table(file.path("Data","Input","Combined MEOW List_Hanno.csv"),sep=";",header=T)
+    neighbours <- read.table(file.path("Data","Input","RegionsMEOW_NeighbourList.csv"),sep=";",header=T)
     neighbours <- subset(neighbours,Action!="remove")
     neighbours$MEOW <- paste(neighbours$MEOW,"MEOW",sep="_")
     colnames(neighbours) <- c("Location","MEOW","Action") ## ADJUST shapefile AND REMOVE!!!!!!!!!!!!!!!!!!!!
@@ -162,7 +149,7 @@ coords_to_regions_GBIF <- function(
   for (i in 1:nchunks){ # loop over all chunks of GBIF coordinate data
     
     # Import processed GBIF files
-    all_coords <- readRDS(file.path("Data",folder,available_files[i])) #rdsfile
+    all_coords <- fread(file.path("Data",folder,available_files[i])) #rdsfile
 
     # Transform to sf object
     coords_sf <- st_as_sf(all_coords,coords=c("decimalLongitude","decimalLatitude"),crs=st_crs(regions))

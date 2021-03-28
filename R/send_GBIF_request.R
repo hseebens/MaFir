@@ -14,7 +14,7 @@
 
 
 
-send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email,colname="scientificName"){
+send_GBIF_request <- function(file_name_extension,n_accounts,user=user,pwd=pwd,email=email){
   
   #######################################################################################
   ### Variables #########################################################################
@@ -28,8 +28,7 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   #######################################################################################
   ## load species list to be downloaded #################################################
   
-  SpecNames <-  fread(file.path("Data","Input",name_of_specieslist))
-  colnames(SpecNames)[colnames(SpecNames)==colname] <- "scientificName"
+  SpecNames <-  fread(file.path("Data","Input",paste0("TaxaList_Standardised_",file_name_extension,".csv")))
   SpecNames <- unique(SpecNames$scientificName)                                      # Get unique species names
 
   #######################################################################################
@@ -53,7 +52,7 @@ send_GBIF_request <- function(name_of_specieslist,n_accounts,user=user,pwd=pwd,e
   colnames(GBIF_species) <- c("speciesKey","scientificName","matchType","Orig_name")
 
   ## save intermediate output ######
-  fwrite(GBIF_species, file.path(path_to_GBIFdownloads,"SpeciesGBIFkeys.csv"))
+  fwrite(GBIF_species, file.path(path_to_GBIFdownloads,paste0("GBIF_SpeciesKeys_",file_name_extension,".csv")))
   # GBIF_species <- fread(file.path(path_to_GBIFdownloads,"SpeciesGBIFkeys.csv"))
 
   

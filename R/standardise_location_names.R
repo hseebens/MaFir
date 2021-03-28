@@ -9,8 +9,8 @@ standardise_location_names <- function(dat,file_name_extension,data_set=NULL){
 
   ## load location table #################################################
   regions <- read.table(file.path("Data","Input","AllLocations_MaFiR.csv"),sep=";",stringsAsFactors = F,header=T)
-  regions$keywords <- gsub("\\(","\\\\(",regions$keywords)
-  regions$keywords <- gsub("\\)","\\\\)",regions$keywords)
+  # regions$keywords <- gsub("\\(","\\\\(",regions$keywords)
+  # regions$keywords <- gsub("\\)","\\\\)",regions$keywords)
   regions$keywords <- tolower(regions$keywords) # set all to lower case for matching
   regions$keywords[regions$keywords==""] <- NA
   regions$Location_lower <- tolower(regions$Location) # set all to lower case for matching

@@ -10,9 +10,9 @@
 
 
 
-get_OBIS_records <- function(name_of_specieslist, path_to_OBISdownloads, colname = "Taxon", file_name_extension,
-                      fieldsobis = c("scientificName", "decimalLongitude", 
-                                     "decimalLatitude", 
+get_OBIS_records <- function(path_to_OBISdownloads, file_name_extension,
+                      fieldsobis = c("scientificName","scientificNameID",
+                                     "decimalLongitude","decimalLatitude", 
                                      "basisOfRecord", "country", "speciesid", 
                                      "marine"),
                       remove.fossils = TRUE,
@@ -21,21 +21,20 @@ get_OBIS_records <- function(name_of_specieslist, path_to_OBISdownloads, colname
   ){
   
   ### Load the Data
-  FullTaxaList <- fread(file.path("Data","Input",name_of_specieslist))
-  colnames(FullTaxaList)[names(FullTaxaList) == colname] <- "Taxon"
-  
+  FullTaxaList <- fread(file.path("Data","Input",paste0("TaxaList_Standardised_",file_name_extension,".csv")))
+
   SpecList <- sort(unique(FullTaxaList$Taxon))
 
   z <- 0
   out_files <- list()
-  for (k in (1:length(SpecList))) {#[sample(1:length(SpecList),200)]
+  for (k in (1:length(SpecList)) ) {#[sample(1:length(SpecList),200)]
     
     if (k%%100==0){
       cat(paste0("\n ",round(k/length(SpecList)*100,2),"% of species processed \n"))
     }
     
     ## download OBIS records
-    my_occ <- try(occurrence(scientificname = SpecList[k], fields = fieldsobis))#
+    my_occ <- try(occurrence(scientificname = SpecList[k], fields = fieldsobis,verbose=F),silent=T)#
     
     ## check if downloaded did not work
     if(any(class(my_occ) == "try-error")){
@@ -74,13 +73,16 @@ get_OBIS_records <- function(name_of_specieslist, path_to_OBISdownloads, colname
   
   OBIS_Download <- unique(OBIS_Download)
   
+  # colnames(OBIS_Download)[colnames(OBIS_Download)=="scientificName"] <- "Taxon"
+  
   ### Save the occurrence records as one big file
   fwrite(OBIS_Download, file = file.path(path_to_OBISdownloads,paste0("OBIS_CompleteDownload_",file_name_extension,".gz")))
-
-  OBIS_Codes_Species <- unique(as.data.frame(cbind(OBIS_Download$scientificName, OBIS_Download$speciesid)))
-  colnames(OBIS_Codes_Species) <- c("scientificName","speciesid")
+  # OBIS_Download <- fread(file = file.path(path_to_OBISdownloads,paste0("OBIS_CompleteDownload_",file_name_extension,".gz")))
   
-  ### Get the species codes
+  OBIS_Codes_Species <- unique(as.data.frame(cbind(OBIS_Download$scientificName, OBIS_Download$Taxon)))
+  colnames(OBIS_Codes_Species) <- c("scientificName","Taxon_origName")
+  
+  ### Store the species codes
   fwrite(OBIS_Codes_Species, file = file.path(path_to_OBISdownloads,paste0("OBIS_SpeciesKeys_",file_name_extension,".csv")))
   
   ### Delete intermediate files

@@ -48,12 +48,14 @@ path_to_OBISdownloads <- "/home/hanno/Storage_large/OBIS"
 ## has to be stored in Data/Input/ and has to include a column named 'scientificName'
 ## for taxon names and 'Location' for region names and 'Taxon' (no authority) for habitat check
 # name_of_specieslist <- "SInAS_AlienSpeciesDB_2.3.1_FullTaxaList.csv"
-name_of_specieslist <- "IntroDat_22Mar2021.csv"
-name_of_taxacolumn <- "scientificName"
-name_of_regioncolumn <- "Region"
+filename_inputData <- "IntroDat_22Mar2021.csv"
+column_scientificName <- "scientificName" # taxon name with or without authority; require for GBIF
+column_taxonName <- "TaxonName" # taxon name without authority; required for OBIS
+column_location <- "Region" # column name of location records
+column_eventDate <- "FirstRecord" # column name of year of first record of occurrence
 
 ## Name of file with the information of alien species and regions
-name_of_TaxonLoc <- "IntroDat_22Mar2021.csv"
+# name_of_TaxonLoc <- "IntroDat_22Mar2021.csv"
 
 ## name of shapefile providing polygons for the new delineation
 name_of_shapefile <- "RegionsTerrMarine"
@@ -63,8 +65,10 @@ file_name_extension <- "FirstRecords"
 
 ###################################################################################
 ### Check and create folder structure #############################################
-create_folders()
+create_folders() # creates folders only if they are not existing yet
 
+prepare_dataset(filename_inputData,column_scientificName,column_taxonName,column_location,column_eventDate,file_name_extension)
+  
 
 ###################################################################################
 ### Obtaining data ################################################################
@@ -87,7 +91,7 @@ email <- "ekinhanno1@outlook.com"                 # your email which you will re
 ###################################################################################
 
 ## send requests to GBIF 
-send_GBIF_request(name_of_specieslist,n_accounts,user=user,pwd=pwd,email=email,colname=name_of_taxacolumn)
+send_GBIF_request(file_name_extension,n_accounts,user=user,pwd=pwd,email=email)
 
 ## get downloads from GBIF (requires running 'send_GBIF_request' first)
 get_GBIF_download(path_to_GBIFdownloads)
@@ -99,7 +103,7 @@ extract_GBIF_columns(path_to_GBIFdownloads,file_name_extension)
 ###################################################################################
 ### get OBIS records ##############################################################
 
-get_OBIS_records(name_of_specieslist, path_to_OBISdownloads,colname=name_of_taxacolumn,file_name_extension)
+get_OBIS_records(path_to_OBISdownloads,file_name_extension)
 
 
 ###################################################################################
@@ -119,6 +123,8 @@ thin_records <- T
 clean_GBIF_records(path_to_GBIFdownloads,file_name_extension,thin_records)
 
 ### clean OBIS records ############################################################
+
+thin_records <- F
 
 clean_OBIS_records(path_to_OBISdownloads,file_name_extension,thin_records)
   
@@ -143,17 +149,13 @@ realm_extension <- TRUE
 
 # Region shapefile requires a consistent structure for marine and terrestrial polygons !!!!!
 
-coords_to_regions_GBIF(name_of_TaxonLoc,
-                       name_of_shapefile,
-                       name_of_taxacolumn=name_of_taxacolumn,
-                       name_of_regioncolumn=name_of_regioncolumn,
+coords_to_regions_GBIF(name_of_shapefile,
+                       path_to_GBIFdownloads,
                        realm_extension,
                        file_name_extension)
 
-coords_to_regions_OBIS(name_of_TaxonLoc,
-                       name_of_shapefile,
-                       name_of_taxacolumn=name_of_taxacolumn,
-                       name_of_regioncolumn=name_of_regioncolumn,
+coords_to_regions_OBIS(name_of_shapefile,
+                       path_to_OBISdownloads,
                        realm_extension,
                        file_name_extension)
 
@@ -161,8 +163,4 @@ coords_to_regions_OBIS(name_of_TaxonLoc,
 ########################################################################
 ## add first records per region (requires 'eventDate' column) ##########
 ## and produce final output file containing GBIF and OBIS records ######
-dat <- add_first_records(file_name_extension,name_of_TaxonLoc,path_to_GBIFdownloads)
-
-
-
-
+dat <- add_first_records(file_name_extension,path_to_GBIFdownloads)

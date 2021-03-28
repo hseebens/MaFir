@@ -5,6 +5,9 @@
 ## check and create folder structure ###################################
 source(file.path("R","create_folders.R")) # 
 
+## prepare data set ####################################################
+source(file.path("R","prepare_dataset.R")) # a function to decompress large zip files
+
 ## obtain and process GBIF records #####################################
 source(file.path("R","send_GBIF_request.R")) # a function to decompress large zip files
 source(file.path("R","get_GBIF_download.R")) # downloads requested data from GBIF
