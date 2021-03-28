@@ -26,7 +26,7 @@
 25;"BHR";"BH";"Bahrain";;0;"Bahrain";;3;"Asia-Temperate";
 26;"BDI";"BI";"Burundi";;0;"Burundi";"Burundi";2;"Africa";"Burundi"
 27;"BEN";"BJ";"Benin";;0;"Benin";"Benin";2;"Africa";"Benin"
-28;"BLM";"BL";"Saint Barthélemy";"St Barthélemy; St. Barthélemy; Saint-Barthélemy; Barthelemy";1;"Saint-Barthélemy";"St. Martin-St. Barthelemy";8;"Southern America";"Saint Barthelemy"
+28;"BLM";"BL";"Saint Barthélemy";"St Barthélemy; St. Barthélemy; Saint-Barthélemy; Barthelemy; Saint Barthelemy";1;"Saint-Barthélemy";"St. Martin-St. Barthelemy";8;"Southern America";"Saint Barthelemy"
 29;"BMU";"BM";"Bermuda";;1;"Bermuda";"Bermuda";8;"Southern America";"Bermuda"
 30;"BRN";"BN";"Brunei Darussalam";"Brunei";0;"Brunei";;;"Asia-Tropical";
 31;"BOL";"BO";"Bolivia";"Bolivia (Plurinational State of)";0;"Bolivia";;8;"Southern America";"Bolivia (Plurinational State of)"
@@ -117,7 +117,7 @@
 110;"ISR";"IL";"Israel";;0;"Israel";"Israel";3;"Asia-Temperate";"Israel"
 111;"IMN";"IM";"Isle of Man";;1;"Isle of Man";;;"Europe";
 112;"IND";"IN";"India";;0;"India";;4;"Asia-Tropical";"India"
-112;"IND";"IN";"Nicobar and Andaman Islands";"Andaman; Nicobar; Nicobar and Andaman";1;"India";;4;"Asia-Tropical";"India"
+112;"IND";"IN";"Nicobar and Andaman Islands";"Andaman; Nicobar; Nicobar and Andaman; Andaman and Nicobar Islands";1;"India";;4;"Asia-Tropical";"India"
 113;"IOT";"IO";"Chagos Archipelago";"Chagos";1;"British Indian Ocean Territory";;4;"Asia-Tropical";
 114;"IRQ";"IQ";"Iraq";;0;"Iraq";;;"Asia-Temperate";
 115;"IRN";"IR";"Iran, Islamic Republic of";"Iran; Iran (Islamic Republic of)";0;"Iran";"Iran (Islamic Republic of)";3;"Asia-Temperate";"Iran (Islamic Republic of)"
@@ -239,7 +239,7 @@
 225;"TCA";"TC";"Turks and Caicos Islands";"Turks and Caicos";1;"Turks and Caicos Islands";;8;"Southern America";
 226;"TCD";"TD";"Chad";;0;"Chad";"Chad";2;"Africa";"Chad"
 227;"ATF";"TF";"Amsterdam Island";"Amsterdam";1;"French Southern Territories";;9;"Antarctic";"French Southern Territories (the)"
-227;"ATF";"TF";"Crozet Islands";"Crozet";1;"French Southern Territories";;9;"Antarctic";"French Southern Territories (the)"
+227;"ATF";"TF";"Crozet Islands";"Crozet; Crozet Islands Group";1;"French Southern Territories";;9;"Antarctic";"French Southern Territories (the)"
 227;"ATF";"TF";"Saint Paul (France)";"St Paul; St. Paul";1;"French Southern Territories";;9;"Antarctic";"French Southern Territories (the)"
 227;"ATF";"TF";"Scattered Islands";"Scattered";1;"French Southern Territories";;9;"Antarctic";"French Southern Territories (the)"
 227;"ATF";"TF";"Kerguelen Islands";"Kerguelen";1;"French Southern Territories";;9;"Antarctic";"French Southern Territories (the)"
